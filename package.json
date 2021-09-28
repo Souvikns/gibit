@@ -1,0 +1,28 @@
+{
+  "name": "gibit",
+  "version": "1.0.0",
+  "description": "gibit helps you find issues within organizations.",
+  "main": "index.js",
+  "scripts": {
+  "dev": "next dev",
+  "build": "next build",
+  "start": "next start",
+  "lint": "next lint"
+},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Souvikns/gibit.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Souvikns/gibit/issues"
+  },
+  "homepage": "https://github.com/Souvikns/gibit#readme",
+  "dependencies": {
+    "next": "^11.1.2",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  }
+}
