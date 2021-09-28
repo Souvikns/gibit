@@ -1,7 +1,7 @@
-export default () => {
-  return (
-    <div>
-      <h1>Gibit</h1>
-    </div>
-  );
+import HomeView from "../view/home";
+
+const App = () => {
+  return <HomeView />;
 };
+
+export default App;
