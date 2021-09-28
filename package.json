@@ -4,11 +4,12 @@
   "description": "gibit helps you find issues within organizations.",
   "main": "index.js",
   "scripts": {
-  "dev": "next dev",
-  "build": "next build",
-  "start": "next start",
-  "lint": "next lint"
-},
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "jest"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Souvikns/gibit.git"
@@ -21,8 +22,12 @@
   },
   "homepage": "https://github.com/Souvikns/gibit#readme",
   "dependencies": {
+    "@octokit/core": "^3.5.1",
     "next": "^11.1.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2"
+  },
+  "devDependencies": {
+    "jest": "^27.2.2"
   }
 }
