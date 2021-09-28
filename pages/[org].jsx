@@ -1,7 +1,7 @@
-import OrgView from '../view/org';
+import OrgView from "../view/org";
 
 const Org = () => {
-  return <OrgView />
+  return <OrgView />;
 };
 
-module.exports = Org
+module.exports = Org;
