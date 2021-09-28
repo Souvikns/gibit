@@ -1,4 +1,5 @@
 import { useRouter } from "next/router";
+import { Box } from "@primer/components";
 
 export default () => {
   const router = useRouter();
@@ -6,7 +7,9 @@ export default () => {
 
   return (
     <div>
-      <h1>{org}</h1>
+      <Box color="fg.muted" bg="canvas.subtle" p={3}>
+        <h1>{org}</h1>
+      </Box>
     </div>
   );
 };
