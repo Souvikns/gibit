@@ -1,7 +1,3 @@
-import OrgView from "../view/org";
+import OrgView from "../lib/views/org";
 
-const Org = () => {
-  return <OrgView />;
-};
-
-module.exports = Org;
+export default OrgView;

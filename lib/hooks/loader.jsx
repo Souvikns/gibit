@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { fetchOrgDetails } from "../lib/ocktokit";
+import { fetchOrgDetails } from "../fetchers";
 
 export const useLoader = (org) => {
   const [Org, setOrg] = useState({});
@@ -21,3 +21,4 @@ export const useLoader = (org) => {
     org: Org,
   };
 };
+
