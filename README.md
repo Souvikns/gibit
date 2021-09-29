@@ -1,2 +1,3 @@
-# gibit
-gibit helps you find issues within organizations. 
+<img src="./assets/readme_banner.png" alt="banner" />
+
+
