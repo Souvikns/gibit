@@ -13,12 +13,8 @@ const Navbar = ({ org_name, org_url, avatar_url }) => {
         </Header.Item>
 
         <Header.Item mr={0}>
-          <Header.Link href={org_url} target="_blank" >
-            <Avatar
-              square 
-              src={avatar_url}
-              size={30}
-              />
+          <Header.Link href={org_url} target="_blank">
+            <Avatar square src={avatar_url} size={30} />
           </Header.Link>
         </Header.Item>
       </Header>

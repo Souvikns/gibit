@@ -1,5 +1,6 @@
+import "../index.css";
+
 import { ThemeProvider } from "@primer/components";
-import '../index.css'
 
 function MyApp({ Component, pageProps }) {
   return (
