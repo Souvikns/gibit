@@ -7,3 +7,4 @@ const HomeView = () => {
 };
 
 module.exports = HomeView;
+

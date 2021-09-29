@@ -1,11 +1,18 @@
 import { useRouter } from "next/router";
-import { Box, Avatar, Link } from "@primer/components";
 import { useLoader } from "../hooks/loader";
-import Header from "../components/header";
+import Header from '../components/org-navbar';
 
 const OrgView = () => {
   const router = useRouter();
+  if (router.query.org && process.env.NEXT_PUBLIC_ORG_NAME) {
+    router.replace("/");
+  }
+
   const { org } = useLoader(router.query.org);
+
+  if (!org) {
+    return null;
+  }
 
   return (
     <div>
@@ -19,3 +26,4 @@ const OrgView = () => {
 };
 
 module.exports = OrgView;
+
