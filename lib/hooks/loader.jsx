@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { fetchOrgDetails } from "../fetchers";
 
 export const useLoader = (org) => {
   const [Org, setOrg] = useState({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchOrgDetails(org).then(({ response, error }) => {
@@ -13,12 +14,11 @@ export const useLoader = (org) => {
           name: response.data.name,
           description: response.data.description,
         });
+        setLoading(false)
       }
     });
   });
 
-  return {
-    org: Org,
-  };
+  return [loading, {org: Org}];
 };
 

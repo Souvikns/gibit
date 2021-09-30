@@ -8,9 +8,9 @@ const OrgView = () => {
     router.replace("/");
   }
 
-  const { org } = useLoader(router.query.org);
+  const [loading, {org}] = useLoader(router.query.org);
 
-  if (!org) {
+  if(loading){
     return null;
   }
 
