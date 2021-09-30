@@ -2,7 +2,7 @@ import Spacer from "./spacer";
 
 const Navbar = ({ org_name, org_url, avatar_url }) => {
   return (
-    <div className="bg-white dark:bg-gray-800  shadow">
+    <div className="bg-white dark:bg-gray-800 shadow">
       <Spacer>
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
@@ -11,7 +11,7 @@ const Navbar = ({ org_name, org_url, avatar_url }) => {
             </div>
 
             <div className="ml-6">
-              <h1 className="text-xl font-medium text-gray-600">{org_name}</h1>
+              <h1 className="text-2xl font-medium text-gray-600">{org_name}</h1>
             </div>
           </div>
         </div>
