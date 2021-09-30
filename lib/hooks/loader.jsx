@@ -14,11 +14,10 @@ export const useLoader = (org) => {
           name: response.data.name,
           description: response.data.description,
         });
-        setLoading(false)
+        setLoading(false);
       }
     });
   });
 
-  return [loading, {org: Org}];
+  return [loading, { org: Org }];
 };
-

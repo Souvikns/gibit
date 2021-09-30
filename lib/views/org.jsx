@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 import { useLoader } from "../hooks/loader";
-import Header from '../components/org-navbar';
+import Header from "../components/org-navbar";
 
 const OrgView = () => {
   const router = useRouter();
@@ -8,9 +8,9 @@ const OrgView = () => {
     router.replace("/");
   }
 
-  const [loading, {org}] = useLoader(router.query.org);
+  const [loading, { org }] = useLoader(router.query.org);
 
-  if(loading){
+  if (loading) {
     return null;
   }
 
@@ -26,4 +26,3 @@ const OrgView = () => {
 };
 
 module.exports = OrgView;
-
