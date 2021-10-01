@@ -1,15 +1,14 @@
-import {useEffect, useState} from 'react';
-import {fetchOrgIssues} from '../fetchers/loader';
+import { useEffect, useState } from "react";
+import { fetchOrgIssues } from "../fetchers/loader";
 
-export const useIssues = (options = {orgName}) => {
+export const useIssues = (options = { orgName }) => {
   const [OrgIssues, setOrgIssues] = useState([]);
   useEffect(() => {
-    fetchOrgIssues(options).then(({result, error}) => {
-      if(!error) {
+    fetchOrgIssues(options).then(({ result, error }) => {
+      if (!error) {
         setOrgIssues(result);
       }
-    })
+    });
   }, []);
   return OrgIssues;
-}
-
+};
