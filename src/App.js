@@ -15,7 +15,7 @@ function App() {
     <Router>
       <Switch>
         <Route exact path="/" children={<Home />} />
-        <Route path="/: org " children={<Org />} />
+        <Route path="/:org" children={<Org />} />
       </Switch>
     </Router>
   );
