@@ -1,7 +1,7 @@
 import Axios from "axios";
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 
-import {orgDetails} from './util';
+import { orgDetails } from "./util";
 
 const ORG_URL = "https://api.github.com/orgs/";
 const ISSUES_URL = "https://api.github.com/search/issues?q=";
@@ -13,9 +13,9 @@ export const useOrg = (orgName) => {
 
   const loadOrgDetails = async () => {
     try {
-      const {data} = await Axios({
-        method : "GET",
-        url : ORG_URL + orgName,
+      const { data } = await Axios({
+        method: "GET",
+        url: ORG_URL + orgName,
       });
       setOrg(orgDetails(data));
       setLoading(false);
@@ -25,7 +25,9 @@ export const useOrg = (orgName) => {
     }
   };
 
-  useEffect(() => { loadOrgDetails(); }, [])
+  useEffect(() => {
+    loadOrgDetails();
+  }, []);
 
-  return {isLoading, error, org};
+  return { isLoading, error, org };
 };
