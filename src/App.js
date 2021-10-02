@@ -28,10 +28,10 @@ const Home = () => {
 }
 
 const Org = () => {
+  const {org} = useParams();
   if (process.env.REACT_APP_ORG_NAME) {
     return <Redirect to="/" />
   }
-  const {org} = useParams();
 
   return <OrgView org={org} />
 }
