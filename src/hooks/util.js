@@ -1,12 +1,12 @@
 export const orgDetails = (data) => {
   return {
-    org_name: data.name,
-    org_url: data.html_url,
-    avatar_url: data.avatar_url,
+    org_name : data.name,
+    org_url : data.html_url,
+    avatar_url : data.avatar_url,
   };
 };
 
-export const queryConstructor = ({ orgName, queryString, queryParams }) => {
+export const queryConstructor = ({orgName, queryString, queryParams}) => {
   if (typeof queryString === "string") {
     return queryString;
   }

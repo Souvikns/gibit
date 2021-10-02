@@ -11,14 +11,12 @@ import HomeView from "./pages/home";
 import OrgView from "./pages/org";
 
 function App() {
-  return (
-    <Router>
-      <Switch>
-        <Route exact path="/" children={<Home />} />
-        <Route path="/:org" children={<Org />} />
-      </Switch>
-    </Router>
-  );
+  return (<Router><Switch>< Route exact path =
+              "/" children = { <Home /> } />
+        <Route path="/: org
+                             " children={<Org />} />
+                             < /Switch>
+    </Router >);
 }
 
 const Home = () => {
