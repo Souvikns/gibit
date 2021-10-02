@@ -17,7 +17,7 @@ function App() {
         <Route exact path="/" children={<Home />} />
         <Route
           path="/: org
-                             "
+  "
           children={<Org />}
         />
       </Switch>
@@ -32,7 +32,6 @@ const Home = () => {
 
   return <HomeView />;
 };
-
 const Org = () => {
   const { org } = useParams();
   if (process.env.REACT_APP_ORG_NAME) {
