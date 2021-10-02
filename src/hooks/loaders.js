@@ -1,7 +1,7 @@
 import Axios from "axios";
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 
-import {orgDetails, queryConstructor} from "./util";
+import { orgDetails, queryConstructor } from "./util";
 
 const ORG_URL = "https://api.github.com/orgs/";
 const ISSUES_URL = "https://api.github.com/search/issues";
@@ -13,9 +13,9 @@ export const useOrg = (orgName) => {
 
   const loadOrgDetails = async () => {
     try {
-      const {data} = await Axios({
-        method : "GET",
-        url : ORG_URL + orgName,
+      const { data } = await Axios({
+        method: "GET",
+        url: ORG_URL + orgName,
       });
       setOrg(orgDetails(data));
       setLoading(false);
@@ -25,9 +25,11 @@ export const useOrg = (orgName) => {
     }
   };
 
-  useEffect(() => { loadOrgDetails(); });
+  useEffect(() => {
+    loadOrgDetails();
+  });
 
-  return {isLoading, error, org};
+  return { isLoading, error, org };
 };
 
 export const useIssue = () => {
@@ -35,12 +37,12 @@ export const useIssue = () => {
   const [error, setError] = useState();
   const [issues, setIssues] = useState({});
 
-  const fetch = async ({orgName, queryString, queryParams}, page = 1) => {
+  const fetch = async ({ orgName, queryString, queryParams }, page = 1) => {
     setLoading(true);
     try {
-      const {data} = await Axios({
-        method : "GET",
-        url : `${ISSUES_URL}?q=${queryConstructor({
+      const { data } = await Axios({
+        method: "GET",
+        url: `${ISSUES_URL}?q=${queryConstructor({
           orgName,
           queryParams,
           queryString,
@@ -48,16 +50,16 @@ export const useIssue = () => {
       });
 
       setIssues({
-        total_count : data.total_count,
-        items : data.items.map((el) => ({
-                                 url : el.html_url,
-                                 repo_url : el.repository_url,
-                                 id : el.id,
-                                 number : el.number,
-                                 labels : el.labels,
-                                 title : el.title,
-                                 body : el.body,
-                               })),
+        total_count: data.total_count,
+        items: data.items.map((el) => ({
+          url: el.html_url,
+          repo_url: el.repository_url,
+          id: el.id,
+          number: el.number,
+          labels: el.labels,
+          title: el.title,
+          body: el.body,
+        })),
       });
 
       setLoading(false);
@@ -67,5 +69,5 @@ export const useIssue = () => {
     }
   };
 
-  return {isLoading, error, issues, fetch};
+  return { isLoading, error, issues, fetch };
 };

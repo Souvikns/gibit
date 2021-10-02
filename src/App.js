@@ -14,27 +14,24 @@ function App() {
   return (
     <Router>
       <Switch>
-        <Route exact path="/" children={
-<Home />} />
+        <Route exact path="/" children={<Home />} />
         <Route
           path="/: org
   "
-  children =
-  { <Org /> } />
-      </Switch >
-      </Router>
+          children={<Org />}
+        />
+      </Switch>
+    </Router>
   );
 }
 
 const Home = () => {
   if (process.env.REACT_APP_ORG_NAME) {
     return <OrgView org={process.env.REACT_APP_ORG_NAME} />;
-}
+  }
 
-return <HomeView />;
-}
-;
-
+  return <HomeView />;
+};
 const Org = () => {
   const { org } = useParams();
   if (process.env.REACT_APP_ORG_NAME) {
