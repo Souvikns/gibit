@@ -27,7 +27,7 @@ export const useOrg = (orgName) => {
 
   useEffect(() => {
     loadOrgDetails();
-  });
+  }, []);
 
   return { isLoading, error, org };
 };
