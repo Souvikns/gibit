@@ -6,11 +6,20 @@ const IssueView = ({ title, url, id, body }) => {
   return (
     <li key={id} className="py-5 px-4">
       <div className="flex flex-col">
-        <a target="_blank" href={url} rel="noreferrer" className="text-xl hover:text-green-400 font-bold">
+        <a
+          target="_blank"
+          href={url}
+          rel="noreferrer"
+          className="text-xl hover:text-green-400 font-bold"
+        >
           {title}
         </a>
         <div>
-          {(body)? <h1 className="text-gray-600 w-4/5 h-20 overflow-ellipsis overflow-hidden py-4">{body}</h1>: null}
+          {body ? (
+            <h1 className="text-gray-600 w-4/5 h-20 overflow-ellipsis overflow-hidden py-4">
+              {body}
+            </h1>
+          ) : null}
         </div>
       </div>
     </li>
