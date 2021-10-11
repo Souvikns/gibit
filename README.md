@@ -9,14 +9,14 @@
 ## Introduction
 
 [Gibit](http://gibit.vercel.app/) is a small project that helps you to find open
-GitHub issues in any organization. Unlike other projects, the focus is on
-issues inside a particular organization.
+GitHub issues in any organization. Unlike other projects, the focus is on issues
+inside a particular organization.
 
 With the release of
 [org readme profile](https://github.blog/changelog/2021-09-14-readmes-for-organization-profiles/),
-organization's readme profile has become the first thing a new contributer visits.
-This project aims to streamline the contributing process and help contributors to quickly find there
-preffered issues respectively.
+organization's readme profile has become the first thing a new contributer
+visits. This project aims to streamline the contributing process and help
+contributors to quickly find there preffered issues respectively.
 
 <br>
 <br>
