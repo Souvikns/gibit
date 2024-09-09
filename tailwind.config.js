@@ -2,20 +2,11 @@
 module.exports = {
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}"
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {},
   },
-  daisyui: {
-    themes: [
-      'pastel',
-      'lofi'
-    ]
-  },
-  plugins: [
-    require('@tailwindcss/forms'),
-    require('daisyui')
-  ],
-}
-
+  daisyui: { themes: ["pastel", "lofi"] },
+  plugins: [require("@tailwindcss/forms"), require("daisyui")],
+};
