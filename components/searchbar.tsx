@@ -1,5 +1,6 @@
 
 export default function Searchbar({ data, update }: { data: string, update: Function }) {
+
     return <input
         type="text"
         value={data}
