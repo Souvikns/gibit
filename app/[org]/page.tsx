@@ -1,5 +1,6 @@
 'use client'
 import Navbar from '../../components/navbar'
+import Issue from '../../components/Issue'
 
 
 export default async function Page({ params }: { params: { org: string } }) {
@@ -9,5 +10,10 @@ export default async function Page({ params }: { params: { org: string } }) {
 
     return <div>
         <Navbar orgName={organisation.name} avatar={organisation.avatar_url} href={organisation.html_url} />
+
+        <div className='container mx-auto'>
+
+        <Issue issue_title={"Test Issue Title"} html_url={"https://github.com/asyncapi"} />
+        </div>
     </div>
 }
