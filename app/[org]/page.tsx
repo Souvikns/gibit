@@ -1,6 +1,6 @@
 'use client'
 import Navbar from '../../components/navbar'
-import Issues from '../../components/issues'
+import Issues from '../../components/Issues'
 
 
 export default async function Page({ params }: { params: { org: string } }) {
