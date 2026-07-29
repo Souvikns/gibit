@@ -1,15 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   deriveRepos,
   filterIssues,
+  ISSUES_PER_PAGE,
   sortIssues,
   type IssueItem,
   type SortKey,
   type StateFilter,
 } from "@/lib/issues";
 import { IssueRow } from "./issue-row";
+import { Pagination } from "./pagination";
 import { Toolbar } from "./toolbar";
 
 interface IssuesBrowserProps {
@@ -25,6 +27,8 @@ export function IssuesBrowser({ issues, totalCount, truncated }: IssuesBrowserPr
   const [query, setQuery] = useState(EMPTY_FILTERS.query);
   const [repo, setRepo] = useState(EMPTY_FILTERS.repo);
   const [sort, setSort] = useState<SortKey>("newest");
+  const [page, setPage] = useState(1);
+  const listRef = useRef<HTMLUListElement>(null);
 
   const counts = useMemo<Record<StateFilter, number>>(
     () => ({
@@ -42,25 +46,50 @@ export function IssuesBrowser({ issues, totalCount, truncated }: IssuesBrowserPr
     [issues, state, query, repo, sort],
   );
 
+  const totalPages = Math.ceil(visible.length / ISSUES_PER_PAGE);
+  const currentPage = Math.min(page, Math.max(totalPages, 1));
+  const pageItems = useMemo(
+    () => visible.slice((currentPage - 1) * ISSUES_PER_PAGE, currentPage * ISSUES_PER_PAGE),
+    [visible, currentPage],
+  );
+
   function clearFilters() {
     setState(EMPTY_FILTERS.state);
     setQuery(EMPTY_FILTERS.query);
     setRepo(EMPTY_FILTERS.repo);
+    setPage(1);
+  }
+
+  function handlePageChange(next: number) {
+    setPage(next);
+    listRef.current?.scrollIntoView({ block: "start" });
   }
 
   return (
     <div>
       <Toolbar
         state={state}
-        onStateChange={setState}
+        onStateChange={(next) => {
+          setState(next);
+          setPage(1);
+        }}
         counts={counts}
         query={query}
-        onQueryChange={setQuery}
+        onQueryChange={(next) => {
+          setQuery(next);
+          setPage(1);
+        }}
         repo={repo}
         repos={repos}
-        onRepoChange={setRepo}
+        onRepoChange={(next) => {
+          setRepo(next);
+          setPage(1);
+        }}
         sort={sort}
-        onSortChange={setSort}
+        onSortChange={(next) => {
+          setSort(next);
+          setPage(1);
+        }}
       />
 
       {truncated && (
@@ -94,11 +123,23 @@ export function IssuesBrowser({ issues, totalCount, truncated }: IssuesBrowserPr
           </button>
         </div>
       ) : (
-        <ul className="mt-6 divide-y divide-hairline-soft overflow-hidden rounded-lg border border-hairline bg-canvas">
-          {visible.map((issue) => (
-            <IssueRow key={issue.id} issue={issue} />
-          ))}
-        </ul>
+        <>
+          <ul
+            ref={listRef}
+            className="mt-6 scroll-mt-36 divide-y divide-hairline-soft overflow-hidden rounded-lg border border-hairline bg-canvas"
+          >
+            {pageItems.map((issue) => (
+              <IssueRow key={issue.id} issue={issue} />
+            ))}
+          </ul>
+          <Pagination
+            page={currentPage}
+            totalPages={totalPages}
+            total={visible.length}
+            perPage={ISSUES_PER_PAGE}
+            onPageChange={handlePageChange}
+          />
+        </>
       )}
     </div>
   );

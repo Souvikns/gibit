@@ -72,6 +72,31 @@ export function sortIssues(issues: IssueItem[], key: SortKey): IssueItem[] {
   return sorted;
 }
 
+/** Issues shown per page in the browser (GitHub's own convention). */
+export const ISSUES_PER_PAGE = 25;
+
+/**
+ * Windowed page-number sequence for the pagination bar.
+ * Always shows the first/last page and the current page ±1, with
+ * `"ellipsis"` markers for gaps. All pages are listed when there
+ * are 7 or fewer.
+ */
+export function pageNumbers(current: number, totalPages: number): (number | "ellipsis")[] {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+  const wanted = new Set<number>([1, totalPages, current - 1, current, current + 1]);
+  const pages = [...wanted].filter((page) => page >= 1 && page <= totalPages).sort((a, b) => a - b);
+  const result: (number | "ellipsis")[] = [];
+  let prev = 0;
+  for (const page of pages) {
+    if (page - prev > 1) result.push("ellipsis");
+    result.push(page);
+    prev = page;
+  }
+  return result;
+}
+
 /** Unique repo names, most-issues-first. */
 export function deriveRepos(issues: IssueItem[]): string[] {
   const counts = new Map<string, number>();

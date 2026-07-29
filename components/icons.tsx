@@ -68,6 +68,26 @@ export function ChevronDownIcon(props: IconProps) {
   );
 }
 
+export function ChevronLeftIcon(props: IconProps) {
+  return (
+    <Base viewBox="0 0 12 12" width="12" height="12" {...props}>
+      <g transform="rotate(-90 6 6)">
+        <path d="M6 8.825c-.2 0-.4-.078-.553-.234l-3.5-3.5a.78.78 0 0 1 1.106-1.103L6 6.94l2.947-2.952a.78.78 0 0 1 1.106 1.103l-3.5 3.5A.78.78 0 0 1 6 8.825Z" />
+      </g>
+    </Base>
+  );
+}
+
+export function ChevronRightIcon(props: IconProps) {
+  return (
+    <Base viewBox="0 0 12 12" width="12" height="12" {...props}>
+      <g transform="rotate(90 6 6)">
+        <path d="M6 8.825c-.2 0-.4-.078-.553-.234l-3.5-3.5a.78.78 0 0 1 1.106-1.103L6 6.94l2.947-2.952a.78.78 0 0 1 1.106 1.103l-3.5 3.5A.78.78 0 0 1 6 8.825Z" />
+      </g>
+    </Base>
+  );
+}
+
 export function ExternalLinkIcon(props: IconProps) {
   return (
     <Base {...props}>
