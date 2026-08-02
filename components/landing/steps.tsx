@@ -1,8 +1,10 @@
+import { EXAMPLE_ORGS } from "@/lib/constants";
+
 const STEPS = [
   {
     number: "1",
     title: "Type an org",
-    body: "Any public GitHub organization — vercel, facebook, golang.",
+    body: `Any public GitHub organization — ${EXAMPLE_ORGS.join(", ")}.`,
   },
   {
     number: "2",

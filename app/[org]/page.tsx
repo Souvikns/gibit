@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ExternalLinkIcon, RepoIcon } from "@/components/icons";
-import { OrgSearch } from "@/components/landing/org-search";
-import { SiteNav } from "@/components/landing/site-nav";
+import { OrgShell } from "@/components/org-shell";
 import { fetchOrg, GitHubError, isValidLogin, searchOrgIssues } from "@/lib/github";
 import { ErrorCard } from "./error-card";
 import { IssuesBrowser } from "./issues-browser";
@@ -28,13 +28,13 @@ export default async function OrgPage({ params }: OrgPageProps) {
     if (error instanceof GitHubError) {
       if (error.kind === "not-found") notFound();
       return (
-        <Shell>
+        <OrgShell>
           <ErrorCard
             kind={error.kind === "rate-limited" ? "rate-limited" : "api"}
             org={org}
             resetAt={error.resetAt}
           />
-        </Shell>
+        </OrgShell>
       );
     }
     throw error;
@@ -49,15 +49,15 @@ export default async function OrgPage({ params }: OrgPageProps) {
   ];
 
   return (
-    <Shell>
+    <OrgShell>
       <header className="border-b border-hairline pb-8">
         <div className="flex items-start gap-5">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src={profile.avatarUrl}
             alt=""
             width={72}
             height={72}
+            priority
             className="shrink-0 rounded-lg border border-hairline"
           />
           <div className="min-w-0">
@@ -90,15 +90,6 @@ export default async function OrgPage({ params }: OrgPageProps) {
         truncated={result.truncated}
       />
       <div className="h-section" />
-    </Shell>
-  );
-}
-
-function Shell({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex min-h-screen flex-col">
-      <SiteNav right={<OrgSearch variant="nav" />} />
-      <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-10">{children}</main>
-    </div>
+    </OrgShell>
   );
 }

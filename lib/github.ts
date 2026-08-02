@@ -42,7 +42,8 @@ async function gh<T>(path: string): Promise<T> {
     throw new GitHubError("not-found", `Not found: ${path}`);
   }
   if ((res.status === 403 || res.status === 429) && res.headers.get("x-ratelimit-remaining") === "0") {
-    const reset = Number(res.headers.get("x-ratelimit-reset")) * 1000;
+    const resetSeconds = Number(res.headers.get("x-ratelimit-reset"));
+    const reset = Number.isFinite(resetSeconds) ? resetSeconds * 1000 : undefined;
     throw new GitHubError("rate-limited", "GitHub API rate limit reached", reset);
   }
   if (!res.ok) {

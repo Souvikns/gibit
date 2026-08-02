@@ -1,10 +1,9 @@
-import { SiteNav } from "@/components/landing/site-nav";
+import { OrgShell } from "@/components/org-shell";
 
 export default function OrgLoading() {
   return (
-    <div className="flex min-h-screen flex-col">
-      <SiteNav />
-      <main className="mx-auto w-full max-w-7xl flex-1 animate-pulse px-6 py-10">
+    <OrgShell>
+      <div className="motion-safe:animate-pulse">
         <div className="flex items-start gap-5 border-b border-hairline pb-8">
           <div className="h-[72px] w-[72px] shrink-0 rounded-lg bg-surface" />
           <div className="flex-1">
@@ -33,7 +32,7 @@ export default function OrgLoading() {
             </div>
           ))}
         </div>
-      </main>
-    </div>
+      </div>
+    </OrgShell>
   );
 }

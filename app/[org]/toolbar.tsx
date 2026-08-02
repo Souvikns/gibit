@@ -2,6 +2,7 @@
 
 import { ChevronDownIcon, SearchIcon } from "@/components/icons";
 import { SORT_OPTIONS, type SortKey, type StateFilter } from "@/lib/issues";
+import type { KeyboardEvent } from "react";
 
 const STATE_TABS: { key: StateFilter; label: string }[] = [
   { key: "open", label: "Open" },
@@ -34,6 +35,18 @@ export function Toolbar({
   sort,
   onSortChange,
 }: ToolbarProps) {
+  function handleTabKeyDown(event: KeyboardEvent<HTMLButtonElement>, index: number) {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    const nextIndex =
+      event.key === "ArrowRight"
+        ? (index + 1) % STATE_TABS.length
+        : (index - 1 + STATE_TABS.length) % STATE_TABS.length;
+    const nextTab = STATE_TABS[nextIndex]!;
+    onStateChange(nextTab.key);
+    document.getElementById(`issue-state-${nextTab.key}`)?.focus();
+  }
+
   return (
     <div className="sticky top-16 z-30 -mx-6 border-b border-hairline-soft bg-canvas/95 px-6 py-3 backdrop-blur">
       <div className="flex flex-wrap items-center gap-3">
@@ -42,8 +55,12 @@ export function Toolbar({
             <button
               key={tab.key}
               role="tab"
+              id={`issue-state-${tab.key}`}
+              aria-controls="issue-results"
               aria-selected={state === tab.key}
+              tabIndex={state === tab.key ? 0 : -1}
               onClick={() => onStateChange(tab.key)}
+              onKeyDown={(event) => handleTabKeyDown(event, STATE_TABS.indexOf(tab))}
               className={
                 state === tab.key
                   ? "rounded-full border border-ink-deep bg-ink-deep px-4 py-1.5 text-body-sm font-medium text-on-dark"
@@ -73,7 +90,7 @@ export function Toolbar({
           <select
             value={repo}
             onChange={(event) => onRepoChange(event.target.value)}
-            className="h-9 max-w-44 appearance-none rounded-md border border-hairline-strong bg-canvas pr-8 pl-3 text-body-sm text-ink focus:border-primary focus:outline-none"
+            className="h-9 max-w-44 appearance-none rounded-md border border-hairline-strong bg-canvas pr-8 pl-3 text-body-sm text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/30"
           >
             <option value="all">All repositories ({repos.length})</option>
             {repos.map((name) => (
@@ -90,7 +107,7 @@ export function Toolbar({
           <select
             value={sort}
             onChange={(event) => onSortChange(event.target.value as SortKey)}
-            className="h-9 appearance-none rounded-md border border-hairline-strong bg-canvas pr-8 pl-3 text-body-sm text-ink focus:border-primary focus:outline-none"
+            className="h-9 appearance-none rounded-md border border-hairline-strong bg-canvas pr-8 pl-3 text-body-sm text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/30"
           >
             {SORT_OPTIONS.map((option) => (
               <option key={option.key} value={option.key}>

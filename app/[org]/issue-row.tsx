@@ -24,7 +24,7 @@ export function IssueRow({ issue }: { issue: IssueItem }) {
   const hiddenCount = issue.labels.length - visibleLabels.length;
 
   return (
-    <li className="flex items-start gap-3 px-5 py-4">
+    <li className="flex items-start gap-3 px-5 py-4 transition-colors duration-150 hover:bg-surface">
       {issue.state === "open" ? (
         <IssueOpenIcon className="mt-1 h-4 w-4 shrink-0 text-semantic-success" />
       ) : (

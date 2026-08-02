@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EXAMPLE_ORGS } from "@/lib/constants";
 
 export function YellowBanner() {
   return (
@@ -14,10 +15,10 @@ export function YellowBanner() {
           </p>
         </div>
         <Link
-          href="/vercel"
+          href={`/${EXAMPLE_ORGS[0]}`}
           className="inline-flex h-11 shrink-0 items-center rounded-md bg-ink-deep px-[18px] text-body-sm font-medium text-on-dark transition-colors duration-150 hover:bg-charcoal"
         >
-          Explore vercel&rsquo;s issues
+          Explore {EXAMPLE_ORGS[0]}&rsquo;s issues
         </Link>
       </div>
     </section>

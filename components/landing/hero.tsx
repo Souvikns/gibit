@@ -1,7 +1,6 @@
 import Link from "next/link";
+import { EXAMPLE_ORGS } from "@/lib/constants";
 import { OrgSearch } from "./org-search";
-
-const EXAMPLES = ["vercel", "facebook", "golang"];
 
 /** Brand-colored sticky-note dots scattered around the hero, per design.md. */
 function StickyNotes() {
@@ -64,7 +63,7 @@ export function Hero() {
         </div>
         <p className="mt-5 text-body-sm text-on-dark-muted">
           Try:{" "}
-          {EXAMPLES.map((org, index) => (
+          {EXAMPLE_ORGS.map((org, index) => (
             <span key={org}>
               {index > 0 && " · "}
               <Link

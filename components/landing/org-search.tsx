@@ -49,7 +49,7 @@ export function OrgSearch({ variant }: { variant: "hero" | "nav" }) {
       <input
         value={value}
         onChange={(event) => setValue(event.target.value)}
-        type="text"
+         type="search"
         aria-label="GitHub organization"
         placeholder="Enter a GitHub org — e.g. vercel"
         autoComplete="off"

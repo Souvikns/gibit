@@ -55,7 +55,7 @@ export function Pagination({ page, totalPages, total, perPage, onPageChange }: P
             </span>
           ) : (
             <button
-              key={item}
+              key={`page-${item}`}
               onClick={() => onPageChange(item)}
               aria-current={item === page ? "page" : undefined}
               aria-label={`Page ${item}`}

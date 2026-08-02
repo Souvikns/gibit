@@ -1,13 +1,12 @@
 import Link from "next/link";
 import { GitHubMark } from "@/components/icons";
+import { EXAMPLE_ORGS } from "@/lib/constants";
 
 const COLUMNS: { heading: string; links: { label: string; href: string; external?: boolean }[] }[] = [
   {
     heading: "Examples",
     links: [
-      { label: "vercel", href: "/vercel" },
-      { label: "facebook", href: "/facebook" },
-      { label: "golang", href: "/golang" },
+      ...EXAMPLE_ORGS.map((org) => ({ label: org, href: `/${org}` })),
     ],
   },
   {
