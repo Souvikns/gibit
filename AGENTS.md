@@ -7,11 +7,12 @@ org's repos. Two routes: `/` (landing) and `/{org}` (issues browser).
 
 - Package manager is **Bun** (`bun.lock`). Use `bun install`, `bun run dev`,
   `bun run build`.
-- **No test runner, linter, or formatter is configured** — the only scripts are
-  `dev` / `build` / `start`. Verify changes with `bunx tsc --noEmit` (strict;
-  passes clean) and `bun run build`. Do not add lint/test config without being
-  asked. (`app/[org]/page.tsx` has a leftover eslint-disable comment; ESLint is
-  not installed.)
+- **No linter or formatter is configured.** `bun test` runs the small suite of
+  pure-helper tests in `lib/*.test.ts` (Bun's built-in test runner — no
+  separate config). Verify changes with `bun test`, `bunx tsc --noEmit`
+  (strict; passes clean), and `bun run build`. Do not add lint config without
+  being asked. (`app/[org]/page.tsx` has a leftover eslint-disable comment;
+  ESLint is not installed.)
 
 ## Design system (the big one)
 

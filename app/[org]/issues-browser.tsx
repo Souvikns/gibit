@@ -19,21 +19,15 @@ interface IssuesBrowserProps {
   issues: IssueItem[];
   totalCount: number;
   truncated: boolean;
+  /** Parsed server-side from the initial request's URL, so the first paint already matches a shared/bookmarked link. */
+  initialFilters: FilterState;
 }
 
-export function IssuesBrowser({ issues, totalCount, truncated }: IssuesBrowserProps) {
+export function IssuesBrowser({ issues, totalCount, truncated, initialFilters }: IssuesBrowserProps) {
   const pathname = usePathname();
-  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
-  const [queryInput, setQueryInput] = useState(filters.query);
-  const [initialized, setInitialized] = useState(false);
+  const [filters, setFilters] = useState<FilterState>(initialFilters);
+  const [queryInput, setQueryInput] = useState(initialFilters.query);
   const listRef = useRef<HTMLUListElement>(null);
-
-  useEffect(() => {
-    const next = parseFilters(new URLSearchParams(window.location.search));
-    setFilters(next);
-    setQueryInput(next.query);
-    setInitialized(true);
-  }, []);
 
   useEffect(() => {
     function handlePopState() {
@@ -54,14 +48,6 @@ export function IssuesBrowser({ issues, totalCount, truncated }: IssuesBrowserPr
     return () => window.clearTimeout(timeout);
   }, [queryInput]);
 
-  useEffect(() => {
-    if (!initialized) return;
-    const query = serializeFilters(filters);
-    if (query !== window.location.search) {
-      window.history.replaceState(null, "", `${pathname}${query}`);
-    }
-  }, [filters, initialized, pathname]);
-
   const counts = useMemo<Record<StateFilter, number>>(
     () => ({
       open: issues.filter((issue) => issue.state === "open").length,
@@ -76,6 +62,8 @@ export function IssuesBrowser({ issues, totalCount, truncated }: IssuesBrowserPr
     [issues, filters],
   );
   const totalPages = Math.ceil(visible.length / ISSUES_PER_PAGE);
+  // Derived, not synced back into `filters.page`: a filter change can shrink
+  // the result set below the requested page without needing an extra effect.
   const currentPage = Math.min(filters.page, Math.max(totalPages, 1));
   const pageItems = useMemo(
     () => visible.slice((currentPage - 1) * ISSUES_PER_PAGE, currentPage * ISSUES_PER_PAGE),
@@ -83,10 +71,11 @@ export function IssuesBrowser({ issues, totalCount, truncated }: IssuesBrowserPr
   );
 
   useEffect(() => {
-    if (initialized && filters.page !== currentPage) {
-      setFilters((current) => ({ ...current, page: currentPage }));
+    const query = serializeFilters({ ...filters, page: currentPage });
+    if (query !== window.location.search) {
+      window.history.replaceState(null, "", `${pathname}${query}`);
     }
-  }, [currentPage, filters.page, initialized]);
+  }, [filters, currentPage, pathname]);
 
   function clearFilters() {
     setQueryInput(DEFAULT_FILTERS.query);

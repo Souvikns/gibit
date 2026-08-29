@@ -153,9 +153,13 @@ export async function searchOrgIssues(login: string): Promise<OrgIssuesResult> {
   const first = await searchIssuesPage(login, 1);
   const pageCount = Math.min(WINDOW_PAGES, Math.ceil(first.total_count / PAGE_SIZE));
 
-  const rest = await Promise.all(
+  // Best-effort: a rate limit or transient failure on a later page shouldn't
+  // discard the issues we already have from earlier pages.
+  const restSettled = await Promise.allSettled(
     Array.from({ length: pageCount - 1 }, (_, i) => searchIssuesPage(login, i + 2)),
   );
+  const rest = restSettled.flatMap((result) => (result.status === "fulfilled" ? [result.value] : []));
+  const pagesDropped = restSettled.some((result) => result.status === "rejected");
 
   // Best-effort org-wide open count — failure must not break the page.
   let openCount: number | null = null;
@@ -176,6 +180,6 @@ export async function searchOrgIssues(login: string): Promise<OrgIssuesResult> {
     issues,
     totalCount: first.total_count,
     openCount,
-    truncated: first.total_count > issues.length,
+    truncated: pagesDropped || first.total_count > issues.length,
   };
 }

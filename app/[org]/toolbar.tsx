@@ -1,8 +1,8 @@
 "use client";
 
-import { ChevronDownIcon, SearchIcon } from "@/components/icons";
+import { CheckIcon, ChevronDownIcon, LinkIcon, SearchIcon } from "@/components/icons";
 import { SORT_OPTIONS, type SortKey, type StateFilter } from "@/lib/issues";
-import type { KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 
 const STATE_TABS: { key: StateFilter; label: string }[] = [
   { key: "open", label: "Open" },
@@ -35,6 +35,32 @@ export function Toolbar({
   sort,
   onSortChange,
 }: ToolbarProps) {
+  const searchRef = useRef<HTMLInputElement>(null);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    function handleKeyDown(event: globalThis.KeyboardEvent) {
+      if (event.key !== "/") return;
+      const target = event.target as HTMLElement;
+      const isEditable =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT" ||
+        target.isContentEditable;
+      if (isEditable) return;
+      event.preventDefault();
+      searchRef.current?.focus();
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  async function handleCopyLink() {
+    await navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1500);
+  }
+
   function handleTabKeyDown(event: KeyboardEvent<HTMLButtonElement>, index: number) {
     if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
     event.preventDefault();
@@ -76,11 +102,12 @@ export function Toolbar({
         <div className="relative min-w-44 flex-1">
           <SearchIcon className="pointer-events-none absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-stone" />
           <input
+            ref={searchRef}
             value={query}
             onChange={(event) => onQueryChange(event.target.value)}
             type="search"
             aria-label="Filter issues by keyword"
-            placeholder="Filter by title, repo, or label…"
+            placeholder="Filter by title, repo, or label… (press / to focus)"
             className="h-9 w-full rounded-md border border-hairline bg-surface pr-3 pl-9 text-body-sm text-ink placeholder:text-muted focus:border-primary focus:outline-none"
           />
         </div>
@@ -117,6 +144,24 @@ export function Toolbar({
           </select>
           <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-stone" />
         </label>
+
+        <button
+          onClick={handleCopyLink}
+          aria-label="Copy link to current filters"
+          className="flex h-9 items-center gap-1.5 rounded-md border border-hairline px-3 text-body-sm font-medium text-steel transition-colors duration-150 hover:text-ink"
+        >
+          {copied ? (
+            <>
+              <CheckIcon className="h-3.5 w-3.5 text-semantic-success" />
+              Copied
+            </>
+          ) : (
+            <>
+              <LinkIcon className="h-3.5 w-3.5" />
+              Copy link
+            </>
+          )}
+        </button>
       </div>
     </div>
   );

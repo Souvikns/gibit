@@ -4,11 +4,13 @@ import { notFound } from "next/navigation";
 import { ExternalLinkIcon, RepoIcon } from "@/components/icons";
 import { OrgShell } from "@/components/org-shell";
 import { fetchOrg, GitHubError, isValidLogin, searchOrgIssues } from "@/lib/github";
+import { parseFilters } from "@/lib/filters";
 import { ErrorCard } from "./error-card";
 import { IssuesBrowser } from "./issues-browser";
 
 interface OrgPageProps {
   params: Promise<{ org: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export async function generateMetadata({ params }: OrgPageProps): Promise<Metadata> {
@@ -16,9 +18,17 @@ export async function generateMetadata({ params }: OrgPageProps): Promise<Metada
   return { title: `${org} issues — gibit` };
 }
 
-export default async function OrgPage({ params }: OrgPageProps) {
+export default async function OrgPage({ params, searchParams }: OrgPageProps) {
   const { org } = await params;
   if (!isValidLogin(org)) notFound();
+
+  const rawParams = await searchParams;
+  const urlParams = new URLSearchParams();
+  for (const [key, value] of Object.entries(rawParams)) {
+    const first = Array.isArray(value) ? value[0] : value;
+    if (first !== undefined) urlParams.set(key, first);
+  }
+  const initialFilters = parseFilters(urlParams);
 
   let profile: Awaited<ReturnType<typeof fetchOrg>>;
   let result: Awaited<ReturnType<typeof searchOrgIssues>>;
@@ -88,6 +98,7 @@ export default async function OrgPage({ params }: OrgPageProps) {
         issues={result.issues}
         totalCount={result.totalCount}
         truncated={result.truncated}
+        initialFilters={initialFilters}
       />
       <div className="h-section" />
     </OrgShell>
