@@ -64,7 +64,8 @@ test("pageNumbers includes a compact window for long lists", () => {
   expect(pageNumbers(5, 10)).toEqual([1, "ellipsis", 4, 5, 6, "ellipsis", 10]);
 });
 
-test("labelTint is deterministic", () => {
-  expect(labelTint("bug")).toEqual(labelTint("bug"));
-  expect(labelTint("bug").chip).toContain("bg-card-tint-");
+test("labelTint derives a readable tint from the label's real color", () => {
+  expect(labelTint("ff0000")).toEqual(labelTint("ff0000"));
+  const tint = labelTint("ff0000");
+  expect(tint.background).not.toBe(tint.color);
 });

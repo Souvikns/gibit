@@ -9,6 +9,10 @@
   /* Notion Sans fallback per design.md: Inter first */
   --font-sans: var(--font-inter), Inter, -apple-system, system-ui, "Segoe UI",
     Helvetica, sans-serif;
+  /* Utility face for issue numbers, repo paths, and org input — not in
+     design.md, added for data/code strings per its "utility face" guidance. */
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Menlo,
+    Consolas, monospace;
 
   /* --- Brand & Primary --- */
   --color-primary: #5645d4;

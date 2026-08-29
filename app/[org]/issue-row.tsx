@@ -5,15 +5,12 @@ import { relativeTime } from "@/lib/time";
 const MAX_VISIBLE_LABELS = 3;
 
 function LabelChip({ name, color }: { name: string; color: string }) {
-  const tint = labelTint(name);
+  const tint = labelTint(color);
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-sm px-2 py-0.5 text-caption font-semibold ${tint.chip}`}
+      className="inline-flex items-center rounded-sm px-2 py-0.5 text-caption font-semibold"
+      style={{ backgroundColor: tint.background, color: tint.color }}
     >
-      <span
-        className="h-1.5 w-1.5 rounded-full"
-        style={{ backgroundColor: `#${color}` }}
-      />
       {name}
     </span>
   );
@@ -28,7 +25,7 @@ export function IssueRow({ issue }: { issue: IssueItem }) {
       {issue.state === "open" ? (
         <IssueOpenIcon className="mt-1 h-4 w-4 shrink-0 text-semantic-success" />
       ) : (
-        <IssueClosedIcon className="mt-1 h-4 w-4 shrink-0 text-primary" />
+        <IssueClosedIcon className="mt-1 h-4 w-4 shrink-0 text-steel" />
       )}
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -49,7 +46,7 @@ export function IssueRow({ issue }: { issue: IssueItem }) {
             </span>
           )}
         </div>
-        <p suppressHydrationWarning className="mt-1 text-caption text-stone">
+        <p suppressHydrationWarning className="mt-1 font-mono text-caption text-stone">
           #{issue.number} · {issue.repo} · opened {relativeTime(issue.createdAt)} by{" "}
           {issue.author}
         </p>

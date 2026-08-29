@@ -1,7 +1,6 @@
 import { GitHubMark } from "@/components/icons";
 import { FeatureGrid } from "@/components/landing/feature-grid";
 import { Hero } from "@/components/landing/hero";
-import { MockIssueCard } from "@/components/landing/mock-issue-card";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { SiteNav } from "@/components/landing/site-nav";
 import { Steps } from "@/components/landing/steps";
@@ -25,9 +24,6 @@ export default function Home() {
       />
       <main className="flex-1">
         <Hero />
-        <div className="relative z-10 mx-auto -mt-32 w-full max-w-3xl px-6">
-          <MockIssueCard />
-        </div>
         <FeatureGrid />
         <YellowBanner />
         <Steps />

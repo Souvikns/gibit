@@ -109,21 +109,18 @@ export function deriveRepos(issues: IssueItem[]): string[] {
 }
 
 /**
- * Deterministic design.md pastel tint for a label name.
- * Returns full static class strings so Tailwind can see them.
+ * Derives a readable chip tint from a label's real GitHub hex color
+ * (rather than a hash-based pastel), so a label's chip actually
+ * reflects how it's colored in the source repo.
  */
-export function labelTint(name: string): { chip: string; dot: string } {
-  const tints = [
-    { chip: "bg-card-tint-lavender text-brand-purple-800", dot: "#7b3ff2" },
-    { chip: "bg-card-tint-peach text-brand-orange-deep", dot: "#dd5b00" },
-    { chip: "bg-card-tint-mint text-brand-green", dot: "#1aae39" },
-    { chip: "bg-card-tint-sky text-link-blue-pressed", dot: "#0075de" },
-    { chip: "bg-card-tint-rose text-brand-pink-deep", dot: "#ff64c8" },
-    { chip: "bg-card-tint-yellow text-brand-brown", dot: "#b79b00" },
-  ];
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
-  }
-  return tints[hash % tints.length]!;
+export function labelTint(hex: string): { background: string; color: string } {
+  const clean = hex.replace(/^#/, "").padStart(6, "0");
+  const r = parseInt(clean.slice(0, 2), 16) || 0;
+  const g = parseInt(clean.slice(2, 4), 16) || 0;
+  const b = parseInt(clean.slice(4, 6), 16) || 0;
+  const mix = (channel: number, target: number, ratio: number) =>
+    Math.round(channel * (1 - ratio) + target * ratio);
+  const background = `rgb(${mix(r, 255, 0.86)}, ${mix(g, 255, 0.86)}, ${mix(b, 255, 0.86)})`;
+  const color = `rgb(${mix(r, 0, 0.35)}, ${mix(g, 0, 0.35)}, ${mix(b, 0, 0.35)})`;
+  return { background, color };
 }
