@@ -1,15 +1,23 @@
 import { relativeTime } from "@/lib/time";
 import { listRepos } from "@/lib/repos";
+import { getLatestSync } from "@/lib/sync/run";
 import { removeRepoAction, toggleRepoAction } from "./actions";
 import { AddFromOwnerForm, AddRepoForm } from "./repo-forms";
+import { SyncPanel } from "./sync-panel";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 export default async function SettingsPage() {
-  const repos = await listRepos();
+  const [repos, latestSync] = await Promise.all([listRepos(), getLatestSync()]);
   return (
     <div className="flex flex-col gap-10">
       <h1 className="text-heading-3 text-ink">Settings</h1>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-heading-5 text-ink">Sync</h2>
+        <SyncPanel initial={latestSync} />
+      </section>
 
       <section className="flex flex-col gap-4">
         <h2 className="text-heading-5 text-ink">Repositories</h2>

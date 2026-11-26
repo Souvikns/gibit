@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/auth/server";
 import { addRepo, addRepos, listOwnerRepos, removeRepo, setRepoEnabled, type OwnerRepo } from "@/lib/repos";
+import { syncStep, type SyncProgress } from "@/lib/sync/run";
 
 export interface ActionResult {
   ok: string | null;
@@ -54,4 +55,15 @@ export async function toggleRepoAction(id: number, enabled: boolean): Promise<vo
   await requireSession();
   await setRepoEnabled(id, enabled);
   revalidatePath("/settings");
+}
+
+export async function syncStepAction(): Promise<SyncProgress | { error: string }> {
+  await requireSession();
+  try {
+    const result = await syncStep({ trigger: "dashboard" });
+    revalidatePath("/settings");
+    return result;
+  } catch (error) {
+    return { error: message(error) };
+  }
 }
