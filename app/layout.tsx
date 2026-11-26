@@ -9,9 +9,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "gibit — find the issue worth fixing",
-  description:
-    "Gibit collates issues from every repo in a GitHub organization into one fast, filterable list.",
+  title: "gibit",
+  description: "A personal triage board for maintainers, shared with Claude.",
 };
 
 export default function RootLayout({
