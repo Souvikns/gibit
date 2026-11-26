@@ -1,61 +1,51 @@
 # AGENTS.md
 
-gibit: Next.js 16 + Tailwind CSS v4 app that collates GitHub issues across an
-org's repos. Two routes: `/` (landing) and `/{org}` (issues browser).
+gibit v2: a single-owner, self-hosted triage board (Next.js 16 + Tailwind v4 +
+Neon Postgres) that syncs issues/PRs from configured repos and exposes them to
+Claude over MCP. Spec: `docs/superpowers/specs/2026-11-26-gibit-v2-triage-design.md`.
 
 ## Commands
 
-- Package manager is **Bun** (`bun.lock`). Use `bun install`, `bun run dev`,
-  `bun run build`.
-- **No linter or formatter is configured.** `bun test` runs the small suite of
-  pure-helper tests in `lib/*.test.ts` (Bun's built-in test runner — no
-  separate config). Verify changes with `bun test`, `bunx tsc --noEmit`
-  (strict; passes clean), and `bun run build`. Do not add lint config without
-  being asked. (`app/[org]/page.tsx` has a leftover eslint-disable comment;
-  ESLint is not installed.)
+- Package manager is **Bun**. `bun install`, `bun run dev`, `bun run build`
+  (runs migrations first; skipped when no DB URL).
+- No linter/formatter. Verify with `bun test`, `bunx tsc --noEmit`,
+  `bun run build`. Don't add lint config unasked.
+- Schema change → `bun run db:generate`, commit `drizzle/`, `bun run db:migrate`.
+- `bun scripts/sync.ts` runs a full sync from the CLI (uses `.env.local`).
 
-## Design system (the big one)
+## Design system
 
-- `design.md` is the visual source of truth (Notion design system). Its tokens
-  are mapped 1:1 into Tailwind v4 `@theme` in `app/globals.css`; keep token
-  names traceable to design.md when adding new ones.
-- **Use the named tokens, never arbitrary values or default-palette colors**:
-  `text-body-sm` / `text-heading-4` (not `text-sm`), `text-ink` / `text-stone` /
-  `text-slate` (not `text-gray-*`), `bg-canvas` / `bg-surface`,
-  `border-hairline`, `rounded-sm`…`rounded-3xl` (design.md radii),
-  `bg-card-tint-*` pastels, `text-link-blue`.
-- Tailwind v4 CSS-first config: everything lives in `globals.css` via
-  `@import "tailwindcss"` + `@theme`. There is no `tailwind.config.js` — don't
-  create one.
-- Tailwind scans source for class strings: dynamic classes must be written out
-  in full (see `labelTint` in `lib/issues.ts`). Never interpolate class names.
+- `design.md` is the visual source of truth; tokens live in `app/globals.css`
+  `@theme`. Use named tokens only (`text-body-sm`, `text-ink`, `bg-surface`,
+  `border-hairline`, `rounded-md`…), never default palette or arbitrary values.
+- No `tailwind.config.js`. Never interpolate class names.
+- Icons: inline SVG in `components/icons.tsx`; no icon library.
 
 ## Architecture
 
-- No API routes, no database, no auth. `app/[org]/page.tsx` (server component)
-  fetches from the GitHub API via `lib/github.ts` and passes a plain
-  `IssueItem[]` to `IssuesBrowser` (client component), which does all
-  filter/sort in memory and paginates the filtered list client-side
-  (`ISSUES_PER_PAGE` in `lib/issues.ts`; page turns never fetch). Pure helpers
-  live in `lib/issues.ts` / `lib/time.ts` and are shared by server and
-  client — keep them dependency-free.
-- **500-issue window is deliberate** (`PAGE_SIZE * WINDOW_PAGES` in
-  `lib/github.ts`): GitHub's search API caps at 1,000 results and
-  unauthenticated search is limited to 10 req/min. Don't add pagination beyond
-  the window; the truncation notice is the intended UX.
-- Optional server-only `GITHUB_TOKEN` env var raises rate limits (`.env*` is
-  gitignored). Without it, expect rate-limit errors in local dev.
-- Errors are typed: `GitHubError` with `kind: "not-found" | "rate-limited" |
-  "api"` → `not-found.tsx` / `ErrorCard`. Validate logins with `isValidLogin`
-  before any network call.
-- Icons are inline SVG components in `components/icons.tsx` — intentionally no
-  icon library.
-- Path alias `@/*` → repo root. tsconfig has extra strict flags
-  (`noUncheckedIndexedAccess` etc.): indexed access yields `T | undefined`.
-
-## Scope guardrails
-
-The approved spec (`docs/superpowers/specs/2026-07-29-gibit-design.md`)
-explicitly lists out-of-scope (YAGNI): pull requests, pagination beyond the
-window, label-based filtering, GitHub Enterprise, auth, dark mode, tests.
-Don't add these unprompted.
+- **GitHub is read-only.** Nothing writes to GitHub. Sync uses GraphQL via
+  plain `fetch` (`lib/github/graphql.ts`).
+- **Mirror vs overlay.** `repos/items/comments/mentions` are written only by
+  sync. `triage/notes/drafts/reports/activity_log` are written only by the
+  owner and Claude. Sync's only overlay writes are the mechanical column moves
+  in `lib/sync/rules.ts`.
+- **Sync is resumable**: `syncStep()` (`lib/sync/run.ts`) works ~45 s, stores
+  per-repo position in `repos.sync_state`, and returns `partial`; callers
+  re-invoke until `done`.
+- **Auth**: `proxy.ts` gates everything except `/login` and `/api/mcp` with a
+  signed cookie (`lib/auth/session.ts`). Server actions call
+  `requireSession()` first.
+- **One service layer**: MCP tools (`lib/mcp/server.ts`) and dashboard server
+  actions both call `lib/triage/service.ts`; never write overlay tables
+  directly from routes or components. MCP writes use `actor: "claude"`, the
+  dashboard uses `actor: "admin"`.
+- MCP endpoint is `/api/mcp` (`mcp-handler` v2 + `withMcpAuth`, bearer
+  `GIBIT_SECRET`). The `triage` prompt lives in `lib/mcp/prompt.ts`.
+- Pure logic (`lib/model.ts`, `lib/github/map.ts`, `lib/github/names.ts`,
+  `lib/sync/rules.ts`, `lib/sync/plan.ts`, `lib/auth/session.ts`,
+  `lib/auth/rate-limit.ts`, `lib/triage/{refs,signals,briefing}.ts`,
+  `lib/time.ts`, `lib/labels.ts`) is unit-tested and
+  must stay free of DB/network access.
+- `db()` is lazy; never touch the DB at module top level.
+- Path alias `@/*` → repo root. tsconfig is extra strict
+  (`noUncheckedIndexedAccess`).
