@@ -1,7 +1,9 @@
+import { headers } from "next/headers";
 import { relativeTime } from "@/lib/time";
 import { listRepos } from "@/lib/repos";
 import { getLatestSync } from "@/lib/sync/run";
 import { removeRepoAction, toggleRepoAction } from "./actions";
+import { ConnectClaude } from "./connect-claude";
 import { AddFromOwnerForm, AddRepoForm } from "./repo-forms";
 import { SyncPanel } from "./sync-panel";
 
@@ -9,7 +11,9 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 export default async function SettingsPage() {
-  const [repos, latestSync] = await Promise.all([listRepos(), getLatestSync()]);
+  const [repos, latestSync, h] = await Promise.all([listRepos(), getLatestSync(), headers()]);
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
+  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
   return (
     <div className="flex flex-col gap-10">
       <h1 className="text-heading-3 text-ink">Settings</h1>
@@ -17,6 +21,11 @@ export default async function SettingsPage() {
       <section className="flex flex-col gap-3">
         <h2 className="text-heading-5 text-ink">Sync</h2>
         <SyncPanel initial={latestSync} />
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-heading-5 text-ink">Connect Claude</h2>
+        <ConnectClaude origin={`${proto}://${host}`} />
       </section>
 
       <section className="flex flex-col gap-4">

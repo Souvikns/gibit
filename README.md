@@ -26,6 +26,42 @@ three environment variables. Migrations run automatically during the build.
 1. Open your deployment, sign in, go to **Settings**, add repos.
 2. Click **Sync now**.
 
+## Connect Claude Code
+
+Settings → **Connect Claude** shows the exact command. It looks like:
+
+```bash
+claude mcp add --transport http gibit https://<your-deployment>/api/mcp \
+  --header "Authorization: Bearer <GIBIT_SECRET>"
+```
+
+Then run the daily playbook in Claude Code:
+
+```
+/mcp__gibit__triage
+```
+
+Claude syncs, researches new items, moves cards on the board, saves research
+notes and draft replies, and writes a report. It never writes to GitHub — you
+post replies yourself.
+
+Tools: `sync`, `list_repos`, `get_briefing`, `list_items`, `get_item`,
+`list_reports`, `move_item`, `add_note`, `save_draft`, `save_report`.
+
+### Run it on a server
+
+Research is better when Claude can read the code. On a machine you keep on:
+
+```bash
+mkdir ~/gibit-work && cd ~/gibit-work
+tmux new -s gibit
+claude            # add the MCP server once, as above
+```
+
+Drive it from your phone with Claude Code Remote Control and run
+`/mcp__gibit__triage`. The playbook clones each configured repo into that
+directory (or pulls it) before researching.
+
 ## Develop
 
 ```bash

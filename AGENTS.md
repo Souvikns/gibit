@@ -35,9 +35,16 @@ Claude over MCP. Spec: `docs/superpowers/specs/2026-11-26-gibit-v2-triage-design
 - **Auth**: `proxy.ts` gates everything except `/login` and `/api/mcp` with a
   signed cookie (`lib/auth/session.ts`). Server actions call
   `requireSession()` first.
+- **One service layer**: MCP tools (`lib/mcp/server.ts`) and dashboard server
+  actions both call `lib/triage/service.ts`; never write overlay tables
+  directly from routes or components. MCP writes use `actor: "claude"`, the
+  dashboard uses `actor: "admin"`.
+- MCP endpoint is `/api/mcp` (`mcp-handler` v2 + `withMcpAuth`, bearer
+  `GIBIT_SECRET`). The `triage` prompt lives in `lib/mcp/prompt.ts`.
 - Pure logic (`lib/model.ts`, `lib/github/map.ts`, `lib/github/names.ts`,
   `lib/sync/rules.ts`, `lib/sync/plan.ts`, `lib/auth/session.ts`,
-  `lib/auth/rate-limit.ts`, `lib/time.ts`, `lib/labels.ts`) is unit-tested and
+  `lib/auth/rate-limit.ts`, `lib/triage/{refs,signals,briefing}.ts`,
+  `lib/time.ts`, `lib/labels.ts`) is unit-tested and
   must stay free of DB/network access.
 - `db()` is lazy; never touch the DB at module top level.
 - Path alias `@/*` → repo root. tsconfig is extra strict
