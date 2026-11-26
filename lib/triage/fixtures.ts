@@ -14,6 +14,7 @@ export function summary(overrides: Partial<ItemSummary> = {}): ItemSummary {
     column: "inbox",
     priority: null,
     lastReason: null,
+    seenAt: null,
     createdAt: "2026-11-01T00:00:00.000Z",
     updatedAt: "2026-11-01T00:00:00.000Z",
     lastCommentBy: null,

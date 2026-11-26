@@ -12,6 +12,7 @@ export interface ItemSummary {
   column: BoardColumn;
   priority: Priority | null;
   lastReason: string | null;
+  seenAt: string | null;
   createdAt: string;
   updatedAt: string;
   lastCommentBy: string | null;

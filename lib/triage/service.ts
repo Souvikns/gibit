@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, gt, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   activityLog,
@@ -31,6 +31,7 @@ export class TriageError extends Error {
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
 const DAY_MS = 86_400_000;
+const BOARD_DONE_DAYS = 14;
 
 // ---------- Summaries ----------
 
@@ -47,6 +48,7 @@ const summaryColumns = {
   column: triage.column,
   priority: triage.priority,
   lastReason: triage.lastReason,
+  seenAt: triage.seenAt,
   createdAt: items.createdAt,
   updatedAt: items.updatedAt,
   lastCommentBy: items.lastCommentBy,
@@ -93,6 +95,7 @@ function toSummary(row: SummaryRow, flags: Flags): ItemSummary {
     column: row.column ?? "inbox",
     priority: row.priority ?? null,
     lastReason: row.lastReason ?? null,
+    seenAt: row.seenAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     lastCommentBy: row.lastCommentBy,
@@ -299,7 +302,35 @@ export async function getBriefing(since?: string): Promise<Briefing> {
   return briefing;
 }
 
+/** Everything not done, plus items that reached done recently. */
+export async function boardItems(): Promise<ItemSummary[]> {
+  const cutoff = new Date(Date.now() - BOARD_DONE_DAYS * DAY_MS);
+  return selectSummaries(
+    or(sql`coalesce(${triage.column}, 'inbox') <> 'done'`, gt(items.updatedAt, cutoff)),
+  );
+}
+
 // ---------- Writes ----------
+
+/** Owner opened the item: clears the unseen-activity badge. Owner-only; never exposed over MCP. */
+export async function markSeen(ref: string): Promise<void> {
+  const { itemId } = await resolveRef(ref);
+  const now = new Date();
+  await db()
+    .insert(triage)
+    .values({ itemId, column: "inbox", seenAt: now, updatedAt: now })
+    .onConflictDoUpdate({ target: triage.itemId, set: { seenAt: now } });
+}
+
+export async function markDraftCopied(ref: string): Promise<void> {
+  const { itemId } = await resolveRef(ref);
+  const [updated] = await db()
+    .update(drafts)
+    .set({ status: "copied", updatedAt: new Date() })
+    .where(and(eq(drafts.itemId, itemId), eq(drafts.status, "draft")))
+    .returning({ id: drafts.id });
+  if (updated) await log(itemId, "admin", "draft", { draftId: updated.id, status: "copied" });
+}
 
 export async function moveItem(input: {
   ref: string;
