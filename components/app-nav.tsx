@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { logout } from "@/app/(app)/actions";
 
-const LINKS = [{ href: "/settings", label: "Settings" }] as const;
+const LINKS = [
+  { href: "/board", label: "Board" },
+  { href: "/reports", label: "Reports" },
+  { href: "/settings", label: "Settings" },
+] as const;
 
 export function AppNav() {
   return (
