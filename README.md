@@ -28,7 +28,7 @@ To rotate a value, change it in Vercel and redeploy. After rotating
 
 1. Open your deployment, sign in, go to **Settings**, and add repos — one at a
    time, or **List repos** for an org and tick the ones you want.
-2. Click **Sync** (on the Board or in Settings). The first sync backfills all
+2. Click **Sync** (on Focus, Triage, or Settings). The first sync backfills all
    open items plus anything closed in the last 90 days; later syncs only fetch
    what changed.
 3. Start on **Focus** — your home page. After Claude runs `/mcp__gibit__triage`,
