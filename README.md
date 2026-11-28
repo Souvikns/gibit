@@ -31,12 +31,18 @@ To rotate a value, change it in Vercel and redeploy. After rotating
 2. Click **Sync** (on the Board or in Settings). The first sync backfills all
    open items plus anything closed in the last 90 days; later syncs only fetch
    what changed.
-3. Work the **Board**. Items flow through seven columns: Inbox, Needs my reply,
-   Needs my review, Investigating, Waiting on others, Ready to close/merge,
-   Done. Drag cards on desktop, or use **Move to** on mobile. Click a card for
-   the thread, Claude's notes, and its draft reply — **Copy & open on GitHub**
-   copies the draft so you can post it yourself.
-4. Read Claude's summaries on **Reports**.
+3. Start on **Focus** — your home page. After Claude runs `/mcp__gibit__triage`,
+   every open item has an assessment: next action (fix, unblock, review,
+   reply, decide, close, wait), effort, impact, and who it's blocked by. Focus
+   ranks items by ease, then impact, then whether your action unblocks someone,
+   then how long people have waited. Tap a quadrant (Quick wins, Big bets,
+   Fill-ins, Ignore for now) or an action to filter; **Copy ask** copies the
+   message for whoever is blocking an item. Open a row for the thread, Claude's
+   notes and draft reply, and to override the assessment.
+4. **Triage** is the kanban (Inbox, Needs my reply, Needs my review,
+   Investigating, Waiting on others, Ready to close/merge, Done) that Claude
+   keeps current. Drag cards on desktop, or use **Move to** on mobile.
+5. Read Claude's summaries on **Reports**.
 
 Sync only ever moves cards mechanically: new items land in Inbox, closed or
 merged items go to Done, reopened items return to Inbox. Every other move is
@@ -57,12 +63,14 @@ Then run the daily playbook in Claude Code:
 /mcp__gibit__triage
 ```
 
-Claude syncs, researches new items, moves cards on the board, saves research
-notes and draft replies, and writes a report. It never writes to GitHub — you
+Claude syncs, assesses new and changed items (next action, effort, impact,
+blockers), keeps the Triage board current, saves draft replies, and writes a
+report. It never writes to GitHub — you
 post replies yourself.
 
 Tools: `sync`, `list_repos`, `get_briefing`, `list_items`, `get_item`,
-`list_reports`, `move_item`, `add_note`, `save_draft`, `save_report`.
+`list_reports`, `assess_items`, `move_item`, `add_note`, `save_draft`,
+`save_report`.
 
 The MCP endpoint uses a bearer token, so it works with **Claude Code**
 (including Remote Control from your phone). Claude Desktop and mobile custom

@@ -3,11 +3,24 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { CloseIcon, ExternalLinkIcon } from "@/components/icons";
 import { Markdown } from "@/components/markdown";
+import { ActionBadge } from "@/components/assessment-badges";
 import { COLUMN_LABELS } from "@/lib/board";
-import { COLUMNS, isMaintainerRole, type BoardColumn, type Priority } from "@/lib/model";
+import { EFFORT_LABELS, IMPACT_LABELS, NEXT_ACTION_LABELS } from "@/lib/focus";
+import {
+  COLUMNS,
+  EFFORTS,
+  IMPACTS,
+  NEXT_ACTIONS,
+  isMaintainerRole,
+  type BoardColumn,
+  type Effort,
+  type Impact,
+  type NextAction,
+  type Priority,
+} from "@/lib/model";
 import type { ItemDetail, ItemSummary } from "@/lib/triage/types";
 import { relativeTime } from "@/lib/time";
-import { markDraftCopiedAction, moveItemAction, openItemAction } from "./actions";
+import { markDraftCopiedAction, moveItemAction, openItemAction, overrideAssessmentAction } from "./actions";
 import { KindIcon } from "./card";
 
 const selectClass =
@@ -100,6 +113,20 @@ export function Drawer({
     });
   }
 
+  function override(patch: { nextAction?: NextAction; effort?: Effort; impact?: Impact }) {
+    if (!item) return;
+    startTransition(async () => {
+      const result = await overrideAssessmentAction(item.ref, patch);
+      if ("error" in result) {
+        setError(result.error);
+        return;
+      }
+      setError(null);
+      setItem({ ...item, ...result.item });
+      onChanged(result.item);
+    });
+  }
+
   async function copyAndOpen() {
     if (!item?.draft) return;
     await navigator.clipboard.writeText(item.draft.body);
@@ -158,6 +185,85 @@ export function Drawer({
 
         {item ? (
           <>
+            <section className="px-5 pt-4">
+              <h3 className="mb-3 text-caption font-medium uppercase tracking-wide text-stone">Assessment</h3>
+              {item.assessment ? (
+                <div className="flex flex-col gap-2 rounded-md bg-surface p-3">
+                  <p className="flex flex-wrap items-center gap-2">
+                    <ActionBadge action={item.assessment.nextAction} />
+                    <span className="text-body-sm font-medium text-ink">{item.assessment.summary}</span>
+                  </p>
+                  {item.assessment.whyNow ? <p className="text-caption text-slate">↳ {item.assessment.whyNow}</p> : null}
+                  {item.assessment.blockedBy ? (
+                    <p className="text-caption text-charcoal">
+                      <span className="font-medium text-ink">Blocked by @{item.assessment.blockedBy.login}</span> —{" "}
+                      {item.assessment.blockedBy.reason}
+                      <span className="mt-1 block rounded-sm bg-canvas px-2 py-1.5">Ask: {item.assessment.blockedBy.ask}</span>
+                    </p>
+                  ) : null}
+                  <p className="text-micro text-stone">
+                    {item.assessment.assessedBy === "claude" ? "Claude" : "You"} · {relativeTime(item.assessment.assessedAt)} ·
+                    confidence {item.assessment.confidence}
+                    {item.needsAssessment ? " · changed since assessed" : ""}
+                  </p>
+                </div>
+              ) : (
+                <p className="rounded-md bg-surface p-3 text-caption text-slate">
+                  Not assessed yet. Run <code className="font-mono">/mcp__gibit__triage</code>, or set it below.
+                </p>
+              )}
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                <label className="flex flex-col gap-1 text-caption text-slate">
+                  Next action
+                  <select
+                    value={item.assessment?.nextAction ?? ""}
+                    disabled={pending}
+                    onChange={(e) => override({ nextAction: e.target.value as NextAction })}
+                    className={selectClass}
+                  >
+                    {item.assessment ? null : <option value="">—</option>}
+                    {NEXT_ACTIONS.map((a) => (
+                      <option key={a} value={a}>
+                        {NEXT_ACTION_LABELS[a]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1 text-caption text-slate">
+                  Effort
+                  <select
+                    value={item.assessment?.effort ?? ""}
+                    disabled={pending}
+                    onChange={(e) => override({ effort: e.target.value as Effort })}
+                    className={selectClass}
+                  >
+                    {item.assessment ? null : <option value="">—</option>}
+                    {EFFORTS.map((x) => (
+                      <option key={x} value={x}>
+                        {EFFORT_LABELS[x]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1 text-caption text-slate">
+                  Impact
+                  <select
+                    value={item.assessment?.impact ?? ""}
+                    disabled={pending}
+                    onChange={(e) => override({ impact: e.target.value as Impact })}
+                    className={selectClass}
+                  >
+                    {item.assessment ? null : <option value="">—</option>}
+                    {IMPACTS.map((x) => (
+                      <option key={x} value={x}>
+                        {IMPACT_LABELS[x]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            </section>
+
             <div className="grid grid-cols-2 gap-3 px-5 py-4">
               <label className="flex flex-col gap-1 text-caption text-slate">
                 Column
