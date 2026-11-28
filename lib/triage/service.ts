@@ -3,6 +3,7 @@ import { db } from "@/lib/db/client";
 import {
   activityLog,
   appState,
+  assessments,
   comments,
   drafts,
   items,
@@ -16,10 +17,11 @@ import {
 import { getOwnerLogin } from "@/lib/github/owner";
 import { parseRepoFullName } from "@/lib/github/names";
 import { COLUMNS, type Actor, type BoardColumn, type Priority } from "@/lib/model";
+import { needsAssessment } from "@/lib/focus";
 import { selectBriefing } from "./briefing";
 import { formatRef, parseRef } from "./refs";
 import { isReviewRequested, needsReply } from "./signals";
-import type { Briefing, ColumnChange, ItemDetail, ItemSummary, ListFilters } from "./types";
+import type { Assessment, Briefing, ColumnChange, ItemDetail, ItemSummary, ListFilters } from "./types";
 
 export class TriageError extends Error {
   constructor(message: string) {
@@ -59,6 +61,17 @@ const summaryColumns = {
   requestedReviewers: items.requestedReviewers,
   labels: items.labels,
   htmlUrl: items.htmlUrl,
+  aSummary: assessments.summary,
+  aNextAction: assessments.nextAction,
+  aEffort: assessments.effort,
+  aImpact: assessments.impact,
+  aUnblocksOthers: assessments.unblocksOthers,
+  aBlockedBy: assessments.blockedBy,
+  aWhyNow: assessments.whyNow,
+  aConfidence: assessments.confidence,
+  aAssessedBy: assessments.assessedBy,
+  aItemUpdatedAt: assessments.itemUpdatedAt,
+  aAssessedAt: assessments.assessedAt,
 };
 
 interface Flags {
@@ -82,7 +95,37 @@ async function loadFlags(): Promise<Flags> {
   };
 }
 
+function toAssessment(row: SummaryRow): Assessment | null {
+  if (
+    row.aSummary === null ||
+    !row.aNextAction ||
+    !row.aEffort ||
+    !row.aImpact ||
+    !row.aConfidence ||
+    !row.aAssessedBy ||
+    !row.aItemUpdatedAt ||
+    !row.aAssessedAt
+  ) {
+    return null;
+  }
+  return {
+    summary: row.aSummary,
+    nextAction: row.aNextAction,
+    effort: row.aEffort,
+    impact: row.aImpact,
+    unblocksOthers: row.aUnblocksOthers ?? false,
+    blockedBy: row.aBlockedBy ?? null,
+    whyNow: row.aWhyNow ?? null,
+    confidence: row.aConfidence,
+    assessedBy: row.aAssessedBy,
+    itemUpdatedAt: row.aItemUpdatedAt.toISOString(),
+    assessedAt: row.aAssessedAt.toISOString(),
+  };
+}
+
 function toSummary(row: SummaryRow, flags: Flags): ItemSummary {
+  const assessment = toAssessment(row);
+  const updatedAt = row.updatedAt.toISOString();
   return {
     ref: formatRef(row.owner, row.name, row.number),
     repo: `${row.owner}/${row.name}`,
@@ -109,6 +152,8 @@ function toSummary(row: SummaryRow, flags: Flags): ItemSummary {
     hasDraft: flags.draftItemIds.has(row.id),
     unansweredOwnerMention: flags.ownerMentionIds.has(row.id),
     unansweredMaintainerMention: flags.maintainerMentionIds.has(row.id),
+    assessment,
+    needsAssessment: needsAssessment({ updatedAt }, assessment),
   };
 }
 
@@ -118,6 +163,7 @@ function querySummaryRows(where?: SQL) {
     .from(items)
     .innerJoin(repos, eq(repos.id, items.repoId))
     .leftJoin(triage, eq(triage.itemId, items.id))
+    .leftJoin(assessments, eq(assessments.itemId, items.id))
     .where(where)
     .orderBy(desc(items.updatedAt));
 }

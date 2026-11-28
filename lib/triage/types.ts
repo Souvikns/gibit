@@ -1,4 +1,29 @@
-import type { Actor, BoardColumn, ItemKind, ItemState, Priority } from "@/lib/model";
+import type {
+  Actor,
+  BlockedBy,
+  BoardColumn,
+  Confidence,
+  Effort,
+  Impact,
+  ItemKind,
+  ItemState,
+  NextAction,
+  Priority,
+} from "@/lib/model";
+
+export interface Assessment {
+  summary: string;
+  nextAction: NextAction;
+  effort: Effort;
+  impact: Impact;
+  unblocksOthers: boolean;
+  blockedBy: BlockedBy | null;
+  whyNow: string | null;
+  confidence: Confidence;
+  assessedBy: "claude" | "admin";
+  itemUpdatedAt: string;
+  assessedAt: string;
+}
 
 export interface ItemSummary {
   ref: string;
@@ -26,6 +51,8 @@ export interface ItemSummary {
   hasDraft: boolean;
   unansweredOwnerMention: boolean;
   unansweredMaintainerMention: boolean;
+  assessment: Assessment | null;
+  needsAssessment: boolean;
 }
 
 export interface ThreadEntry {

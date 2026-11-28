@@ -11,7 +11,12 @@ import {
 } from "drizzle-orm/pg-core";
 import type {
   Actor,
+  BlockedBy,
   BoardColumn,
+  Confidence,
+  Effort,
+  Impact,
+  NextAction,
   CommentKind,
   ItemKind,
   ItemState,
@@ -127,6 +132,23 @@ export const triage = pgTable("triage", {
   updatedAt: ts("updated_at").notNull().defaultNow(),
 });
 
+export const assessments = pgTable("assessments", {
+  itemId: text("item_id")
+    .primaryKey()
+    .references(() => items.id, { onDelete: "cascade" }),
+  summary: text("summary").notNull(),
+  nextAction: text("next_action").$type<NextAction>().notNull(),
+  effort: text("effort").$type<Effort>().notNull(),
+  impact: text("impact").$type<Impact>().notNull(),
+  unblocksOthers: boolean("unblocks_others").notNull().default(false),
+  blockedBy: jsonb("blocked_by").$type<BlockedBy | null>(),
+  whyNow: text("why_now"),
+  confidence: text("confidence").$type<Confidence>().notNull(),
+  assessedBy: text("assessed_by").$type<"claude" | "admin">().notNull(),
+  itemUpdatedAt: ts("item_updated_at").notNull(),
+  assessedAt: ts("assessed_at").notNull().defaultNow(),
+});
+
 export const notes = pgTable("notes", {
   id: serial("id").primaryKey(),
   itemId: text("item_id")
@@ -163,7 +185,7 @@ export const activityLog = pgTable(
     id: serial("id").primaryKey(),
     itemId: text("item_id").references(() => items.id, { onDelete: "cascade" }),
     actor: text("actor").$type<Actor>().notNull(),
-    action: text("action").$type<"move" | "note" | "draft" | "report" | "sync">().notNull(),
+    action: text("action").$type<"move" | "note" | "draft" | "report" | "sync" | "assess">().notNull(),
     detail: jsonb("detail").$type<Record<string, unknown>>().notNull().default({}),
     createdAt: ts("created_at").notNull().defaultNow(),
   },
