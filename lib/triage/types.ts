@@ -98,6 +98,10 @@ export interface Briefing {
   unansweredMentions: BriefingSection;
   approvedNotMerged: BriefingSection;
   columnChanges: ColumnChange[];
+  /** Open items with no assessment, or new activity since the last one. */
+  needsAssessment: number;
+  /** Top 5 open items by focus score. */
+  focusTop: ItemSummary[];
 }
 
 export interface ListFilters {
@@ -108,5 +112,6 @@ export interface ListFilters {
   needsReply?: boolean;
   mentionsMe?: boolean;
   reviewRequested?: boolean;
+  needsAssessment?: boolean;
   limit?: number;
 }

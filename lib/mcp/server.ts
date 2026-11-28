@@ -3,7 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db/client";
 import { repos } from "@/lib/db/schema";
 import { parseRepoFullName } from "@/lib/github/names";
-import { COLUMNS } from "@/lib/model";
+import { COLUMNS, CONFIDENCES, EFFORTS, IMPACTS, NEXT_ACTIONS } from "@/lib/model";
 import { syncStep } from "@/lib/sync/run";
 import * as triage from "@/lib/triage/service";
 import { TRIAGE_PROMPT } from "./prompt";
@@ -81,6 +81,10 @@ export function registerGibit(server: McpServer): void {
         needs_reply: z.boolean().optional().describe("Open items where a non-maintainer spoke last"),
         mentions_me: z.boolean().optional().describe("Open items with an unanswered @mention of the owner"),
         review_requested: z.boolean().optional().describe("Open PRs requesting the owner's review"),
+        needs_assessment: z
+          .boolean()
+          .optional()
+          .describe("Open items with no assessment yet, or new activity since the last one"),
         limit: z.number().int().min(1).max(200).optional(),
       }),
     },
@@ -94,6 +98,7 @@ export function registerGibit(server: McpServer): void {
           needsReply: args.needs_reply,
           mentionsMe: args.mentions_me,
           reviewRequested: args.review_requested,
+          needsAssessment: args.needs_assessment,
           limit: args.limit,
         }),
       ),
@@ -139,6 +144,56 @@ export function registerGibit(server: McpServer): void {
       inputSchema: z.object({ ref, body: z.string().min(1) }),
     },
     (args) => run(() => triage.saveDraft({ ...args, author: "claude" })),
+  );
+
+  server.registerTool(
+    "assess_items",
+    {
+      description:
+        "Save your assessment of 1–25 items: what the owner should do next, effort, impact, and who it's blocked by. This drives gibit's Focus page ranking. All-or-nothing: if any ref is unknown, nothing is saved and the error lists the bad refs.",
+      inputSchema: z.object({
+        assessments: z
+          .array(
+            z.object({
+              ref,
+              summary: z.string().min(1).max(200).describe("One-line TL;DR of the item and what's needed"),
+              next_action: z.enum(NEXT_ACTIONS),
+              effort: z.enum(EFFORTS).describe("xs <30min known spot · s <half day · m a day or two / design · l larger or unclear"),
+              impact: z.enum(IMPACTS).describe("high: many users/regression/security/release blocker · med: real bug or useful feature · low: cosmetic/niche"),
+              unblocks_others: z.boolean().optional().describe("The owner acting frees someone else's work"),
+              blocked_by: z
+                .object({
+                  login: z.string().min(1).describe("GitHub login without @"),
+                  reason: z.string().min(1),
+                  ask: z.string().min(1).describe("The exact question or request to send them"),
+                })
+                .nullable()
+                .optional(),
+              why_now: z.string().max(200).nullable().optional(),
+              confidence: z.enum(CONFIDENCES),
+            }),
+          )
+          .min(1)
+          .max(25),
+      }),
+    },
+    ({ assessments }) =>
+      run(() =>
+        triage.assessItems(
+          assessments.map((a) => ({
+            ref: a.ref,
+            summary: a.summary,
+            nextAction: a.next_action,
+            effort: a.effort,
+            impact: a.impact,
+            unblocksOthers: a.unblocks_others,
+            blockedBy: a.blocked_by ?? null,
+            whyNow: a.why_now ?? null,
+            confidence: a.confidence,
+          })),
+          "claude",
+        ),
+      ),
   );
 
   server.registerTool(
