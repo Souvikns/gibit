@@ -27,6 +27,11 @@ describe("selectBriefing", () => {
     expect(refs(b.unansweredMentions)).toEqual(["a/b#5"]);
   });
 
+  test("counts items needing assessment and ranks the focus top", () => {
+    expect(b.needsAssessment).toBe(5); // all open fixtures are unassessed
+    expect(b.focusTop).toEqual([]);
+  });
+
   test("counts columns and records since", () => {
     expect(b.columnCounts).toEqual({ inbox: 4, ready: 1, done: 1 });
     expect(b.since).toBe(SINCE.toISOString());

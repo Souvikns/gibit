@@ -1,8 +1,8 @@
 "use server";
 
 import { requireSession } from "@/lib/auth/server";
-import type { BoardColumn, Priority } from "@/lib/model";
-import { getItem, markDraftCopied, markSeen, moveItem } from "@/lib/triage/service";
+import type { BoardColumn, Effort, Impact, NextAction, Priority } from "@/lib/model";
+import { getItem, markDraftCopied, markSeen, moveItem, overrideAssessment } from "@/lib/triage/service";
 import type { ItemDetail, ItemSummary } from "@/lib/triage/types";
 
 function message(error: unknown): string {
@@ -35,4 +35,16 @@ export async function openItemAction(ref: string): Promise<{ item: ItemDetail } 
 export async function markDraftCopiedAction(ref: string): Promise<void> {
   await requireSession();
   await markDraftCopied(ref);
+}
+
+export async function overrideAssessmentAction(
+  ref: string,
+  patch: { nextAction?: NextAction; effort?: Effort; impact?: Impact },
+): Promise<{ item: ItemSummary } | { error: string }> {
+  await requireSession();
+  try {
+    return { item: await overrideAssessment(ref, patch) };
+  } catch (error) {
+    return { error: message(error) };
+  }
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useDraggable } from "@dnd-kit/core";
+import { ActionBadge, EffortImpact } from "@/components/assessment-badges";
 import { IssueClosedIcon, IssueOpenIcon, MergedIcon, PullRequestIcon } from "@/components/icons";
 import { COLUMN_LABELS, isUnseen } from "@/lib/board";
 import { COLUMNS, type BoardColumn, type Priority } from "@/lib/model";
@@ -79,6 +80,12 @@ export function Card({
           ) : null}
         </span>
         <span className="mt-1.5 line-clamp-3 block text-body-sm font-medium text-ink">{item.title}</span>
+        {item.assessment ? (
+          <span className="mt-2 flex flex-wrap items-center gap-1.5">
+            <ActionBadge action={item.assessment.nextAction} />
+            <EffortImpact assessment={item.assessment} />
+          </span>
+        ) : null}
         {item.priority || reviewRequested || item.unansweredOwnerMention || item.hasDraft || item.isDraft ? (
           <span className="mt-2 flex flex-wrap items-center gap-1.5">
             {item.priority ? (

@@ -1,4 +1,29 @@
-import type { Actor, BoardColumn, ItemKind, ItemState, Priority } from "@/lib/model";
+import type {
+  Actor,
+  BlockedBy,
+  BoardColumn,
+  Confidence,
+  Effort,
+  Impact,
+  ItemKind,
+  ItemState,
+  NextAction,
+  Priority,
+} from "@/lib/model";
+
+export interface Assessment {
+  summary: string;
+  nextAction: NextAction;
+  effort: Effort;
+  impact: Impact;
+  unblocksOthers: boolean;
+  blockedBy: BlockedBy | null;
+  whyNow: string | null;
+  confidence: Confidence;
+  assessedBy: "claude" | "admin";
+  itemUpdatedAt: string;
+  assessedAt: string;
+}
 
 export interface ItemSummary {
   ref: string;
@@ -26,6 +51,8 @@ export interface ItemSummary {
   hasDraft: boolean;
   unansweredOwnerMention: boolean;
   unansweredMaintainerMention: boolean;
+  assessment: Assessment | null;
+  needsAssessment: boolean;
 }
 
 export interface ThreadEntry {
@@ -71,6 +98,10 @@ export interface Briefing {
   unansweredMentions: BriefingSection;
   approvedNotMerged: BriefingSection;
   columnChanges: ColumnChange[];
+  /** Open items with no assessment, or new activity since the last one. */
+  needsAssessment: number;
+  /** Top 5 open items by focus score. */
+  focusTop: ItemSummary[];
 }
 
 export interface ListFilters {
@@ -81,5 +112,6 @@ export interface ListFilters {
   needsReply?: boolean;
   mentionsMe?: boolean;
   reviewRequested?: boolean;
+  needsAssessment?: boolean;
   limit?: number;
 }

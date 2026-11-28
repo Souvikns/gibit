@@ -1,4 +1,4 @@
-import type { ItemSummary } from "./types";
+import type { Assessment, ItemSummary } from "./types";
 
 /** Test helper: a complete ItemSummary with overridable fields. */
 export function summary(overrides: Partial<ItemSummary> = {}): ItemSummary {
@@ -28,6 +28,26 @@ export function summary(overrides: Partial<ItemSummary> = {}): ItemSummary {
     hasDraft: false,
     unansweredOwnerMention: false,
     unansweredMaintainerMention: false,
+    assessment: null,
+    needsAssessment: true,
+    ...overrides,
+  };
+}
+
+/** Test helper: a complete Assessment with overridable fields. */
+export function assessment(overrides: Partial<Assessment> = {}): Assessment {
+  return {
+    summary: "Something to do",
+    nextAction: "fix",
+    effort: "s",
+    impact: "med",
+    unblocksOthers: false,
+    blockedBy: null,
+    whyNow: null,
+    confidence: "med",
+    assessedBy: "claude",
+    itemUpdatedAt: "2026-11-01T00:00:00.000Z",
+    assessedAt: "2026-11-01T00:00:00.000Z",
     ...overrides,
   };
 }

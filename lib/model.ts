@@ -32,6 +32,22 @@ export interface RepoSyncState {
   maxUpdatedAt: string | null;
 }
 
+export const NEXT_ACTIONS = ["fix", "unblock", "review", "reply", "decide", "close", "wait"] as const;
+export type NextAction = (typeof NEXT_ACTIONS)[number];
+export const EFFORTS = ["xs", "s", "m", "l"] as const;
+export type Effort = (typeof EFFORTS)[number];
+export const IMPACTS = ["low", "med", "high"] as const;
+export type Impact = (typeof IMPACTS)[number];
+export const CONFIDENCES = ["low", "med", "high"] as const;
+export type Confidence = (typeof CONFIDENCES)[number];
+
+/** Who an item is waiting on, why, and the exact question to ask them. */
+export interface BlockedBy {
+  login: string;
+  reason: string;
+  ask: string;
+}
+
 export interface Label {
   name: string;
   color: string;

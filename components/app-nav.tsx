@@ -2,7 +2,8 @@ import Link from "next/link";
 import { logout } from "@/app/(app)/actions";
 
 const LINKS = [
-  { href: "/board", label: "Board" },
+  { href: "/focus", label: "Focus" },
+  { href: "/triage", label: "Triage" },
   { href: "/reports", label: "Reports" },
   { href: "/settings", label: "Settings" },
 ] as const;

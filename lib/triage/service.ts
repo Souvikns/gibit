@@ -1,8 +1,9 @@
-import { and, asc, desc, eq, gt, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   activityLog,
   appState,
+  assessments,
   comments,
   drafts,
   items,
@@ -13,13 +14,25 @@ import {
   syncRuns,
   triage,
 } from "@/lib/db/schema";
+import { excludedSet } from "@/lib/db/upsert";
 import { getOwnerLogin } from "@/lib/github/owner";
 import { parseRepoFullName } from "@/lib/github/names";
-import { COLUMNS, type Actor, type BoardColumn, type Priority } from "@/lib/model";
+import {
+  COLUMNS,
+  type Actor,
+  type BlockedBy,
+  type BoardColumn,
+  type Confidence,
+  type Effort,
+  type Impact,
+  type NextAction,
+  type Priority,
+} from "@/lib/model";
+import { needsAssessment } from "@/lib/focus";
 import { selectBriefing } from "./briefing";
 import { formatRef, parseRef } from "./refs";
 import { isReviewRequested, needsReply } from "./signals";
-import type { Briefing, ColumnChange, ItemDetail, ItemSummary, ListFilters } from "./types";
+import type { Assessment, Briefing, ColumnChange, ItemDetail, ItemSummary, ListFilters } from "./types";
 
 export class TriageError extends Error {
   constructor(message: string) {
@@ -59,6 +72,17 @@ const summaryColumns = {
   requestedReviewers: items.requestedReviewers,
   labels: items.labels,
   htmlUrl: items.htmlUrl,
+  aSummary: assessments.summary,
+  aNextAction: assessments.nextAction,
+  aEffort: assessments.effort,
+  aImpact: assessments.impact,
+  aUnblocksOthers: assessments.unblocksOthers,
+  aBlockedBy: assessments.blockedBy,
+  aWhyNow: assessments.whyNow,
+  aConfidence: assessments.confidence,
+  aAssessedBy: assessments.assessedBy,
+  aItemUpdatedAt: assessments.itemUpdatedAt,
+  aAssessedAt: assessments.assessedAt,
 };
 
 interface Flags {
@@ -82,7 +106,37 @@ async function loadFlags(): Promise<Flags> {
   };
 }
 
+function toAssessment(row: SummaryRow): Assessment | null {
+  if (
+    row.aSummary === null ||
+    !row.aNextAction ||
+    !row.aEffort ||
+    !row.aImpact ||
+    !row.aConfidence ||
+    !row.aAssessedBy ||
+    !row.aItemUpdatedAt ||
+    !row.aAssessedAt
+  ) {
+    return null;
+  }
+  return {
+    summary: row.aSummary,
+    nextAction: row.aNextAction,
+    effort: row.aEffort,
+    impact: row.aImpact,
+    unblocksOthers: row.aUnblocksOthers ?? false,
+    blockedBy: row.aBlockedBy ?? null,
+    whyNow: row.aWhyNow ?? null,
+    confidence: row.aConfidence,
+    assessedBy: row.aAssessedBy,
+    itemUpdatedAt: row.aItemUpdatedAt.toISOString(),
+    assessedAt: row.aAssessedAt.toISOString(),
+  };
+}
+
 function toSummary(row: SummaryRow, flags: Flags): ItemSummary {
+  const assessment = toAssessment(row);
+  const updatedAt = row.updatedAt.toISOString();
   return {
     ref: formatRef(row.owner, row.name, row.number),
     repo: `${row.owner}/${row.name}`,
@@ -109,6 +163,8 @@ function toSummary(row: SummaryRow, flags: Flags): ItemSummary {
     hasDraft: flags.draftItemIds.has(row.id),
     unansweredOwnerMention: flags.ownerMentionIds.has(row.id),
     unansweredMaintainerMention: flags.maintainerMentionIds.has(row.id),
+    assessment,
+    needsAssessment: needsAssessment({ updatedAt }, assessment),
   };
 }
 
@@ -118,6 +174,7 @@ function querySummaryRows(where?: SQL) {
     .from(items)
     .innerJoin(repos, eq(repos.id, items.repoId))
     .leftJoin(triage, eq(triage.itemId, items.id))
+    .leftJoin(assessments, eq(assessments.itemId, items.id))
     .where(where)
     .orderBy(desc(items.updatedAt));
 }
@@ -155,7 +212,12 @@ async function summaryById(itemId: string): Promise<ItemSummary> {
   return summary;
 }
 
-async function log(itemId: string | null, actor: Actor, action: "move" | "note" | "draft" | "report", detail: Record<string, unknown>) {
+async function log(
+  itemId: string | null,
+  actor: Actor,
+  action: "move" | "note" | "draft" | "report" | "assess",
+  detail: Record<string, unknown>,
+) {
   await db().insert(activityLog).values({ itemId, actor, action, detail });
 }
 
@@ -198,6 +260,7 @@ export async function listItems(filters: ListFilters): Promise<{ total: number; 
     if (filters.reviewRequested) result = result.filter((s) => isReviewRequested(s, owner));
   }
   if (filters.mentionsMe) result = result.filter((s) => s.state === "open" && s.unansweredOwnerMention);
+  if (filters.needsAssessment) result = result.filter((s) => s.state === "open" && s.needsAssessment);
 
   const limit = Math.min(Math.max(filters.limit ?? DEFAULT_LIMIT, 1), MAX_LIMIT);
   return { total: result.length, items: result.slice(0, limit) };
@@ -403,4 +466,116 @@ export async function saveReport(input: { title: string; body: string }): Promis
     .returning({ id: reports.id, createdAt: reports.createdAt });
   await log(null, "claude", "report", { reportId: row!.id, title: input.title.trim() });
   return { id: row!.id, createdAt: row!.createdAt.toISOString() };
+}
+
+// ---------- Assessments ----------
+
+export const MAX_ASSESS_BATCH = 25;
+export const MAX_SUMMARY_LENGTH = 200;
+
+export interface AssessmentInput {
+  ref: string;
+  summary: string;
+  nextAction: NextAction;
+  effort: Effort;
+  impact: Impact;
+  unblocksOthers?: boolean;
+  blockedBy?: BlockedBy | null;
+  whyNow?: string | null;
+  confidence: Confidence;
+}
+
+/** Open items with their assessments, for the Focus page. */
+export async function focusItems(): Promise<ItemSummary[]> {
+  return selectSummaries(eq(items.state, "open"));
+}
+
+/** All-or-nothing: every ref must resolve before anything is written. */
+export async function assessItems(
+  entries: AssessmentInput[],
+  actor: "claude" | "admin",
+): Promise<{ assessed: string[] }> {
+  if (entries.length === 0) throw new TriageError("No assessments given");
+  if (entries.length > MAX_ASSESS_BATCH) throw new TriageError(`At most ${MAX_ASSESS_BATCH} assessments per call`);
+
+  const resolved: { itemId: string; ref: string; entry: AssessmentInput }[] = [];
+  const failures: string[] = [];
+  for (const entry of entries) {
+    const summary = entry.summary.trim();
+    if (!summary) failures.push(`${entry.ref}: summary is empty`);
+    else if (summary.length > MAX_SUMMARY_LENGTH) failures.push(`${entry.ref}: summary over ${MAX_SUMMARY_LENGTH} chars`);
+    try {
+      const { itemId, ref } = await resolveRef(entry.ref);
+      resolved.push({ itemId, ref, entry });
+    } catch (error) {
+      failures.push(error instanceof Error ? error.message : String(error));
+    }
+  }
+  if (failures.length) throw new TriageError(`Nothing saved. Fix these and retry:\n- ${failures.join("\n- ")}`);
+
+  const updatedAt = new Map(
+    (
+      await db()
+        .select({ id: items.id, updatedAt: items.updatedAt })
+        .from(items)
+        .where(inArray(items.id, resolved.map((r) => r.itemId)))
+    ).map((r) => [r.id, r.updatedAt]),
+  );
+  const now = new Date();
+  const rows = resolved.map(({ itemId, entry }) => ({
+    itemId,
+    summary: entry.summary.trim(),
+    nextAction: entry.nextAction,
+    effort: entry.effort,
+    impact: entry.impact,
+    unblocksOthers: entry.unblocksOthers ?? false,
+    blockedBy: entry.blockedBy ?? null,
+    whyNow: entry.whyNow?.trim() || null,
+    confidence: entry.confidence,
+    assessedBy: actor,
+    itemUpdatedAt: updatedAt.get(itemId) ?? now,
+    assessedAt: now,
+  }));
+  await db()
+    .insert(assessments)
+    .values(rows)
+    .onConflictDoUpdate({ target: assessments.itemId, set: excludedSet(assessments, ["itemId"]) });
+  await db()
+    .insert(activityLog)
+    .values(
+      resolved.map(({ itemId, entry }) => ({
+        itemId,
+        actor,
+        action: "assess" as const,
+        detail: { nextAction: entry.nextAction, effort: entry.effort, impact: entry.impact },
+      })),
+    );
+  return { assessed: resolved.map((r) => r.ref) };
+}
+
+/** Owner correction from the drawer. Creates an assessment if Claude hasn't made one. */
+export async function overrideAssessment(
+  ref: string,
+  patch: { nextAction?: NextAction; effort?: Effort; impact?: Impact },
+): Promise<ItemSummary> {
+  const { itemId } = await resolveRef(ref);
+  const current = await summaryById(itemId);
+  const base = current.assessment;
+  await assessItems(
+    [
+      {
+        ref,
+        summary: base?.summary ?? current.title.slice(0, MAX_SUMMARY_LENGTH),
+        nextAction: patch.nextAction ?? base?.nextAction ?? "decide",
+        effort: patch.effort ?? base?.effort ?? "m",
+        impact: patch.impact ?? base?.impact ?? "med",
+        unblocksOthers: base?.unblocksOthers ?? false,
+        blockedBy: base?.blockedBy ?? null,
+        whyNow: base?.whyNow ?? null,
+        confidence: "high",
+      },
+    ],
+    "admin",
+  );
+  return summaryById(itemId);
 }

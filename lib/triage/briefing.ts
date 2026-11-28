@@ -1,3 +1,4 @@
+import { rankFocus } from "@/lib/focus";
 import type { BoardColumn } from "@/lib/model";
 import { isReviewRequested, needsReply } from "./signals";
 import type { Briefing, BriefingSection, ColumnChange, ItemSummary } from "./types";
@@ -15,6 +16,7 @@ export function selectBriefing(input: {
   since: Date;
   owner: string;
   lastSyncAt: string | null;
+  now?: number;
 }): Briefing {
   const { items, owner } = input;
   const since = input.since.toISOString();
@@ -36,5 +38,7 @@ export function selectBriefing(input: {
       items.filter((i) => i.kind === "pr" && i.state === "open" && i.reviewDecision === "APPROVED"),
     ),
     columnChanges: [...input.changes].sort((a, b) => b.at.localeCompare(a.at)),
+    needsAssessment: items.filter((i) => i.state === "open" && i.needsAssessment).length,
+    focusTop: rankFocus(items, owner, input.now ?? Date.now()).ranked.slice(0, 5).map((r) => r.item),
   };
 }
